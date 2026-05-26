@@ -55,7 +55,7 @@ export default async function CompanyPage({ params }: { params: Promise<{ slug: 
           </p>
         </div>
         <Link
-          href={`/c/${company.slug}/ask`}
+          href={`/c/${company.slug}/ask` as const}
           className="rounded-full bg-ocean px-4 py-2 text-sm text-white hover:bg-oceanDeep"
         >
           Ask the AI copilot →
