@@ -21,12 +21,14 @@ jobs:
         run: brew install xcodegen
       - name: Generate project
         run: xcodegen generate
-      - name: Build
+      - name: Build (simulator SDK, no runtime needed)
         run: |
           xcodebuild \
             -project TrueReview.xcodeproj \
             -scheme TrueReview \
-            -destination 'generic/platform=iOS Simulator' \
+            -sdk iphonesimulator \
+            -arch arm64 \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=YES \
             build
