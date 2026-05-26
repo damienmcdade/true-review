@@ -29,6 +29,21 @@ true-review/
 | `ios/` | TestFlight (manual) | Xcode Cloud or local archive |
 | Source of truth | GitHub | `gh repo view damienmcdade/true-review` |
 
+## Live URLs
+
+| Surface | URL |
+| --- | --- |
+| Web (production) | https://true-review-kappa.vercel.app |
+| API | https://truereview-api-production.up.railway.app |
+| API docs | https://truereview-api-production.up.railway.app/docs |
+| GitHub | https://github.com/damienmcdade/true-review |
+| Vercel project | https://vercel.com/damienmcdade17-2595s-projects/true-review |
+| Railway project | https://railway.com/project/cd42df3c-1ae1-453a-8302-30838cd63593 |
+
+## One-time cleanup needed
+
+I accidentally created three duplicate Postgres instances on Railway during the initial setup (the `railway add` retries created a fresh DB each time despite appearing interactive, and the delete operations from the CLI kept timing out against Railway's GraphQL API). The keeper is the one wired via `${{Postgres-O9KV.DATABASE_URL}}` — please delete `Postgres-Cqwj` and `Postgres-Efdw` from the Railway dashboard to avoid them sitting idle on your bill.
+
 ## Local Dev
 
 ```bash
