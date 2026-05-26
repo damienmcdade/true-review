@@ -40,9 +40,11 @@ true-review/
 | Vercel project | https://vercel.com/damienmcdade17-2595s-projects/true-review |
 | Railway project | https://railway.com/project/cd42df3c-1ae1-453a-8302-30838cd63593 |
 
-## One-time cleanup needed
+## Railway state notes
 
-I accidentally created three duplicate Postgres instances on Railway during the initial setup (the `railway add` retries created a fresh DB each time despite appearing interactive, and the delete operations from the CLI kept timing out against Railway's GraphQL API). The keeper is the one wired via `${{Postgres-O9KV.DATABASE_URL}}` — please delete `Postgres-Cqwj` and `Postgres-Efdw` from the Railway dashboard to avoid them sitting idle on your bill.
+The keeper database is `Postgres-O9KV`, wired into the API via `${{Postgres-O9KV.DATABASE_URL}}`.
+
+Three orphan volumes (`postgres-volume`, `postgres-volume-YjHK`, `postgres-volume-kWLs`) appear in `railway volume list` and the dashboard. Their `VolumeInstance` records are in `state: DELETED` (no storage provisioned, not billable). Railway's `volumeDelete` mutation returns success but doesn't remove the parent `Volume` metadata — that's a server-side quirk. If you want them gone from the UI, open a Railway support ticket.
 
 ## Local Dev
 
