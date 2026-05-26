@@ -15,20 +15,30 @@ jobs:
         working-directory: ios
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.app
+      - name: Show available Xcodes
+        run: ls /Applications | grep -i xcode
+      - name: Select latest Xcode
+        run: |
+          XCODE=$(ls /Applications | grep -E '^Xcode_[0-9]' | sort -V | tail -1)
+          echo "Selecting $XCODE"
+          sudo xcode-select -s "/Applications/$XCODE"
       - name: Install xcodegen
         run: brew install xcodegen
       - name: Generate project
         run: xcodegen generate
-      - name: Build (simulator SDK, no runtime needed)
+      # Build for the iOS device SDK so actool doesn't require a Simulator runtime.
+      # We disable code signing because CI has no provisioning profile — this
+      # gets us a clean compile/typecheck without needing Apple credentials.
+      - name: Build (iphoneos SDK, no signing)
         run: |
           xcodebuild \
             -project TrueReview.xcodeproj \
             -scheme TrueReview \
-            -sdk iphonesimulator \
+            -sdk iphoneos \
             -arch arm64 \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
             ONLY_ACTIVE_ARCH=YES \
             build
