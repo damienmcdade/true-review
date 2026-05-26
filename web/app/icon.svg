@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd9b0"/>
+      <stop offset="0.55" stop-color="#ffb38a"/>
+      <stop offset="1" stop-color="#9bd9d2"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6cb6b8"/>
+      <stop offset="1" stop-color="#1f5d6e"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0.5" y1="0" x2="1" y2="0.5">
+      <stop offset="0" stop-color="#fff2c4" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff2c4" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff8d6"/>
+      <stop offset="1" stop-color="#ffd28a"/>
+    </radialGradient>
+    <clipPath id="round">
+      <rect x="0" y="0" width="512" height="512" rx="96" ry="96"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#round)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+
+    <!-- Sun glow -->
+    <circle cx="380" cy="170" r="60" fill="#fff2c4" opacity="0.55"/>
+
+    <!-- Light beam from lighthouse lamp -->
+    <polygon points="200,210 512,90 512,330" fill="url(#beam)"/>
+
+    <!-- Far wave -->
+    <path d="M0 340 Q 64 320 128 340 T 256 340 T 384 340 T 512 340 V512 H0 Z" fill="#3a8fa3" opacity="0.85"/>
+    <!-- Mid wave -->
+    <path d="M0 380 Q 64 360 128 380 T 256 380 T 384 380 T 512 380 V512 H0 Z" fill="url(#water)"/>
+    <!-- Foam wave -->
+    <path d="M0 430 Q 64 415 128 430 T 256 430 T 384 430 T 512 430 V512 H0 Z" fill="#bfe6e2"/>
+
+    <!-- Rocky base -->
+    <path d="M120 410 Q 170 400 200 410 Q 230 420 260 410 Q 290 400 320 410 V470 H120 Z" fill="#5a4a3b"/>
+
+    <!-- Lighthouse tower (coral with white stripes) -->
+    <g>
+      <polygon points="190,420 230,420 220,200 200,200" fill="#fff4e3"/>
+      <polygon points="190,420 230,420 220,200 200,200" fill="#ff7a5a" opacity="0.85"/>
+      <!-- White stripes -->
+      <polygon points="195,260 225,260 224,240 196,240" fill="#fff4e3"/>
+      <polygon points="194,320 226,320 225,300 195,300" fill="#fff4e3"/>
+      <polygon points="193,380 227,380 226,360 194,360" fill="#fff4e3"/>
+
+      <!-- Gallery deck -->
+      <rect x="186" y="190" width="48" height="12" rx="2" fill="#1f2a2e"/>
+      <!-- Lamp room -->
+      <rect x="194" y="160" width="32" height="32" rx="3" fill="#1f2a2e"/>
+      <circle cx="210" cy="176" r="11" fill="url(#lamp)"/>
+      <!-- Roof -->
+      <polygon points="194,160 226,160 210,138" fill="#1f2a2e"/>
+      <circle cx="210" cy="135" r="3" fill="#1f2a2e"/>
+      <rect x="209" y="120" width="2" height="14" fill="#1f2a2e"/>
+    </g>
+  </g>
+</svg>

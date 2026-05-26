@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --sand: #fff4e3;
+  --sand-deep: #f4d9b0;
+  --seafoam: #9bd9d2;
+  --ocean: #3a8fa3;
+  --ocean-deep: #1f5d6e;
+  --coral: #ff8a65;
+  --sunset: #ffb38a;
+  --ink: #1f2a2e;
+}
+
+html, body {
+  background: var(--sand);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Frosted card on top of the animated beach */
+.glass {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 10px 40px -20px rgba(31, 93, 110, 0.25);
+}
+
+.glass-dark {
+  background: rgba(31, 42, 46, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  color: #fff;
+}
+
+/* ---------- Animated beach background ---------- */
+
+.beach {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    #ffd9b0 0%,
+    #ffb38a 18%,
+    #ffd0a0 30%,
+    #9bd9d2 55%,
+    #3a8fa3 75%,
+    #f4d9b0 90%,
+    #fff4e3 100%
+  );
+  background-size: 100% 220%;
+  animation: skyShift 60s ease-in-out infinite alternate;
+}
+
+@keyframes skyShift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 0% 30%; }
+}
+
+.beach .sun {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  width: 18vmax;
+  height: 18vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff2c4 0%, #ffd28a 40%, rgba(255, 179, 138, 0) 70%);
+  transform: translate(-50%, -50%);
+  filter: blur(2px);
+  animation: sunPulse 8s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+}
+
+@keyframes sunPulse {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+  100% { transform: translate(-52%, -48%) scale(1.06); opacity: 1; }
+}
+
+.beach svg.waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 60%;
+  bottom: 12%;
+}
+
+.beach .wave path {
+  animation: waveDrift 14s linear infinite;
+}
+.beach .wave.w2 path { animation-duration: 22s; animation-direction: reverse; }
+.beach .wave.w3 path { animation-duration: 32s; }
+.beach .wave.w4 path { animation-duration: 44s; animation-direction: reverse; }
+
+@keyframes waveDrift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-25%); }
+}
+
+.beach .sand-fg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18%;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.4), transparent 60%),
+    linear-gradient(180deg, #f4d9b0 0%, #e8c490 80%);
+  animation: sandShimmer 20s ease-in-out infinite alternate;
+}
+
+@keyframes sandShimmer {
+  0%   { filter: brightness(1); }
+  100% { filter: brightness(1.05); }
+}
+
+/* Drifting glints on the water */
+.beach .glint {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  filter: blur(1px);
+  animation: glintFloat linear infinite;
+  opacity: 0;
+}
+
+@keyframes glintFloat {
+  0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  20%  { opacity: 0.9; }
+  80%  { opacity: 0.9; }
+  100% { transform: translate(60px, -20px) scale(1.2); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beach,
+  .beach .sun,
+  .beach .wave path,
+  .beach .sand-fg,
+  .beach .glint {
+    animation: none !important;
+  }
+}
