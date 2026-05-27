@@ -15,10 +15,21 @@
   --ink: #0d3b4a;
 }
 
-html, body {
-  background: #6ee2d0;
+/* IMPORTANT: body MUST be transparent so the fixed .beach (z-index:-1)
+   paints through. Solid body backgrounds hide negative-z-index children. */
+html {
+  background: #6ee2d0;   /* fallback seafoam while .beach is paint-pending */
+  color: var(--ink);
+}
+body {
+  background: transparent;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+}
+/* Main content stays above the backdrop. */
+#main {
+  position: relative;
+  z-index: 1;
 }
 
 /* Frosted card on top of the animated beach */
@@ -43,7 +54,8 @@ html, body {
 .beach {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;   /* sits behind #main (z-index:1) but above the html fallback */
+  pointer-events: none;
   overflow: hidden;
   background: linear-gradient(
     180deg,
