@@ -2,6 +2,9 @@ import logging
 import os
 import re
 from contextlib import asynccontextmanager
+
+log = logging.getLogger("true_review.main")
+
 from datetime import datetime
 from collections import Counter
 from typing import Optional
@@ -48,6 +51,7 @@ from .schemas import (
     ModerationLogOut,
 )
 from .seed import run_seed
+from .bulk_import import bulk_import_edgar
 from .ai import ReviewSnippet, ask_llm
 from .security import (
     sanitize_text,
@@ -75,9 +79,21 @@ async def lifespan(_: FastAPI):
     init_db()
     from sqlmodel import Session as _Session
     with _Session(engine) as session:
-        # Always run seed — it's idempotent and tops up demo data when we
-        # expand the SAMPLE_COMPANIES / *_REVIEWS lists.
+        # Always run the curated seed — it's idempotent and tops up demo
+        # content when we expand the SAMPLE_COMPANIES / *_REVIEWS lists.
         run_seed(session)
+
+        # Bulk-import SEC EDGAR tickers if our catalog is still small.
+        # Threshold gates this so we don't refetch 10k entries on every cold
+        # start once it has succeeded. Idempotent: dupe slugs get skipped.
+        count = len(session.exec(select(Company)).all())
+        if count < 1500:
+            try:
+                result = bulk_import_edgar(session)
+                _log.info("EDGAR bulk import: added=%s skipped=%s",
+                          result.get("added"), result.get("skipped"))
+            except Exception as e:  # noqa: BLE001 — never let import abort startup
+                _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
     yield
 
 
