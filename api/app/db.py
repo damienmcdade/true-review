@@ -47,14 +47,17 @@ _REQUIRED_REVIEW_COLUMNS = {
 }
 
 
+# SQLAlchemy stores Python Enum *member names* (uppercase) in the Postgres
+# enum type, not the .value strings. So the Pg enum's labels are NONE,
+# T1_EMAIL, T2_LINKEDIN, T3_DOCUMENT, T4_PAYROLL, T_RECEIPT, T_FRAUD_EVIDENCE.
 _REQUIRED_VERIFICATIONTIER_VALUES = {
-    "none",
-    "t1_email",
-    "t2_linkedin",
-    "t3_document",
-    "t4_payroll",
-    "t_receipt",         # added v0.4 for shopping reviews
-    "t_fraud_evidence",  # added v0.4 for scam reports
+    "NONE",
+    "T1_EMAIL",
+    "T2_LINKEDIN",
+    "T3_DOCUMENT",
+    "T4_PAYROLL",
+    "T_RECEIPT",         # added v0.4 for shopping reviews
+    "T_FRAUD_EVIDENCE",  # added v0.4 for scam reports
 }
 
 
@@ -71,7 +74,7 @@ def _enum_values(conn, type_name: str) -> set[str]:
 
 
 def _schema_is_out_of_sync(insp) -> bool:
-    """True if existing tables exist but are missing v0.3+ columns/tables."""
+    """True if existing tables exist but are missing v0.3+ columns/tables/enum values."""
     tables = set(insp.get_table_names())
     if "companies" in tables:
         existing = {c["name"] for c in insp.get_columns("companies")}
@@ -83,6 +86,15 @@ def _schema_is_out_of_sync(insp) -> bool:
             return True
     if tables and "users" in tables and "email_verifications" not in tables:
         return True
+    # Enum drift — if the Postgres enum is missing v0.4 verifier tiers, recreate.
+    if tables and "users" in tables:
+        try:
+            with engine.connect() as conn:
+                vals = _enum_values(conn, "verificationtier")
+            if vals and not _REQUIRED_VERIFICATIONTIER_VALUES.issubset(vals):
+                return True
+        except Exception:
+            pass
     return False
 
 
