@@ -303,6 +303,51 @@ EMPLOYMENT_REVIEWS = [
      "Edge platform means real-world incidents. On-call is well-supported but it does come around regularly.",
      "Engineering", "current"),
 
+    # Patagonia (also an employer)
+    ("patagonia", 4.6, "Mission alignment isn't a slogan here",
+     "Worked at the Ventura HQ for two years. Environmental initiatives are real budget items, not marketing. Pay is below tech but well above retail. Surf-during-lunch is real if the waves are good.",
+     "HQ", "current"),
+    ("patagonia", 4.4, "Retail floor is the best floor I've worked",
+     "Store associates are paid well above retail average, schedules are predictable, and the discount lets you actually own the gear. Big difference from my old big-box retail job.",
+     "Retail", "current"),
+    ("patagonia", 4.0, "Comp lower than tech, balance higher",
+     "Coming from a mid-size SaaS, my base dropped about 15%. The trade-off was real PTO, hard stops on hours, and a manager who actually used the time off too.",
+     "Engineering", "former"),
+    ("patagonia", 4.2, "1% for the Planet is real",
+     "The corporate-citizenship work isn't a side project. Watched leadership push back on a profitable but environmentally bad partnership. They walked.",
+     "Sustainability", "current"),
+
+    # Apple (also an employer)
+    ("apple", 4.0, "Secrecy culture is exactly what you'd expect",
+     "Three years in software engineering. Compartmentalisation is real — you often don't know what the team next to you is shipping. Trade-off is the privacy of being able to focus on your actual project.",
+     "Engineering", "current"),
+    ("apple", 3.6, "Hardware org runs hot during product cycles",
+     "Pre-event crunch is intense. Post-event the calm doesn't fully return because the next product's already in motion. Compensation reflects the pace.",
+     "Hardware", "former"),
+    ("apple", 4.3, "Best benefits I've encountered",
+     "Healthcare, ESPP, retirement match, and the on-campus amenities. The intangible — free coffee aside — was the medical staff for ergonomic issues.",
+     "Engineering", "current"),
+    ("apple", 3.8, "Promotion ladders are narrow at senior levels",
+     "Levels exist but the cohort sizes shrink fast above ICT5. Patience and visibility on cross-team projects matter as much as raw output.",
+     "Engineering", "current"),
+    ("apple", 4.1, "Internal mobility worked for me",
+     "Switched orgs from services to hardware engineering after two years. Process took a quarter but the receiving team rolled out the welcome mat.",
+     "Engineering", "current"),
+
+    # Trader Joe's (also an employer)
+    ("trader-joes", 4.5, "Pay + bennies > regional grocery competitors",
+     "Crew Member starting wage above the regional average. Quarterly raises if you're hitting the bar. Healthcare for part-timers is unusual in the industry.",
+     "Crew (retail)", "current"),
+    ("trader-joes", 4.4, "Promotion path is real",
+     "Started as Crew, made Mate in 14 months, Captain track is open. The internal mobility is the headline benefit they don't advertise enough.",
+     "Crew → Mate", "current"),
+    ("trader-joes", 4.0, "Customer interactions are the actual job",
+     "If you don't like chatting with customers, this isn't the gig. The conversation density is the differentiator. Some shifts are wonderful, some are exhausting.",
+     "Crew (retail)", "former"),
+    ("trader-joes", 4.2, "Schedules are predictable",
+     "Posted two weeks in advance. Manager actually respects time-off requests. Compared to my last grocery job, night-and-day.",
+     "Crew (retail)", "current"),
+
     # Cloudflare
     ("cloudflare", 4.0, "Big tech infra problems, mid-size company feel",
      "Daily traffic numbers I'd never see at a smaller place. Decision-making still feels relatively un-bureaucratic compared to the FAANGs.",
@@ -448,6 +493,20 @@ SHOPPING_REVIEWS = [
     ("github", 4.5, "Enterprise SSO worth it",
      "If your org is over 50 engineers, the SAML + audit log features in Enterprise are worth the price jump.",
      "Enterprise", 21.0),
+
+    # Notion (also a merchant — the SaaS product)
+    ("notion", 4.4, "Team plan is the actual unlock",
+     "Used Notion as a solo for years on the free plan. Bumped to Team last quarter for a 6-person company and the version-history + granular sharing alone paid for it.",
+     "Notion Team plan", 10.0),
+    ("notion", 3.9, "Slow on really big workspaces",
+     "Past about 500 pages with deep nesting, navigation gets sluggish. Mobile feels every database query. They're working on it.",
+     "Notion Personal", 0.0),
+    ("notion", 4.2, "AI add-on grew on me",
+     "Skeptical at first. Now I use it for summarising long pages, generating outlines from notes, and cleaning up rough drafts. Not transformative — but useful.",
+     "Notion AI add-on", 10.0),
+    ("notion", 4.0, "Sync is reliable now",
+     "Used to get conflicts and stale clients. Past 18 months I haven't lost anything. Big improvement.",
+     "Notion Personal Pro", 5.0),
 
     # REI
     ("rei", 4.5, "Co-op return policy is real",
