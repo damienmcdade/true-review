@@ -22,7 +22,7 @@ import httpx
 
 
 USER_AGENT = (
-    "TrueReview/0.4 (https://true-review-kappa.vercel.app; legal@true-review.example)"
+    "TrueReview/0.4 (https://truereview.dev; legal@truereview.dev)"
 )
 
 

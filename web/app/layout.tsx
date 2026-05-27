@@ -3,14 +3,27 @@ import Script from 'next/script';
 import BeachBackground from '@/components/BeachBackground';
 import './globals.css';
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://truereview.dev';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'True Review — Verified company culture intelligence',
   description:
     'AI-native company review platform with verified employment, transparent moderation, and real workplace truth. Free for everyone.',
+  alternates: {
+    canonical: '/'
+  },
   openGraph: {
     title: 'True Review',
     description: 'Verified company culture intelligence.',
+    url: SITE_URL,
+    siteName: 'True Review',
     type: 'website'
+  },
+  twitter: {
+    card: 'summary',
+    title: 'True Review',
+    description: 'Verified company culture intelligence.'
   },
   other: {
     'google-adsense-account': 'ca-pub-8731629548430880'

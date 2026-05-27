@@ -33,7 +33,8 @@ true-review/
 
 | Surface | URL |
 | --- | --- |
-| Web (production) | https://true-review-kappa.vercel.app |
+| Web (production) | https://truereview.dev |
+| Web (Vercel fallback) | https://true-review-kappa.vercel.app |
 | API | https://truereview-api-production.up.railway.app |
 | API docs | https://truereview-api-production.up.railway.app/docs |
 | GitHub | https://github.com/damienmcdade/true-review |
