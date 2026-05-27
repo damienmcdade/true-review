@@ -729,6 +729,139 @@ EMPLOYMENT_REVIEWS = [
      "Engineering culture is research-leaning + community-first. Pay is competitive with non-FAANG tech.",
      "Engineering", "current"),
 
+    # --- Beef-up batch: more depth on recent additions ---
+
+    # Reddit
+    ("reddit", 3.6, "Open-source culture didn't survive IPO completely",
+     "Some teams still ship the way we did pre-IPO. Others are more press-aware now. Manager-dependent.",
+     "Engineering", "current"),
+    ("reddit", 4.2, "Smaller scale than expected, in a good way",
+     "Working at Reddit feels closer to a 500-person company than the user-numbers would suggest. Direct lines to leadership exist.",
+     "Engineering", "current"),
+
+    # OpenAI
+    ("openai", 4.5, "Hardest interview process I've done",
+     "Multi-stage, technical, behavioural, mission-fit. Felt thorough rather than gimmicky. Compensation reflects the bar.",
+     "Engineering", "current"),
+    ("openai", 3.8, "Pace is sustainable for some teams, not all",
+     "Applied research teams have different rhythms than product teams. Talk to peers in the actual team you'd join.",
+     "Research", "former"),
+
+    # Nvidia
+    ("nvidia", 4.2, "Tenure is real here",
+     "Median tenure in my org is 7+ years. People stay because the work compounds and the company doesn't have a layoff history.",
+     "Engineering", "current"),
+    ("nvidia", 3.9, "AI org grew faster than process could keep up",
+     "Pre-2022 Nvidia and post-2022 Nvidia are different scales. New hires sometimes find structure incomplete in younger AI teams.",
+     "AI/ML", "current"),
+
+    # Atlassian
+    ("atlassian", 3.7, "Levelling can feel slow",
+     "Promotion calibration is rigorous but slow. P4 to P5 took two years for me. Comp refresh between promos was generous though.",
+     "Engineering", "former"),
+
+    # Adobe
+    ("adobe", 4.1, "DEI work has been substantive",
+     "Pay-equity audits + transparent pipeline programs go beyond what most public companies do publicly.",
+     "Engineering", "current"),
+
+    # Salesforce
+    ("salesforce", 3.5, "Trailblazer culture wears on some",
+     "All-hands events + Dreamforce + cultural rituals are real. If you'd find that performative, you'll struggle.",
+     "Marketing", "current"),
+
+    # Uber
+    ("uber", 3.9, "Recovery from the 2017 culture issues is real",
+     "Substantive change since the Khosrowshahi era. Not perfect but visibly different from the press accounts of the old culture.",
+     "Engineering", "current"),
+
+    # Walmart
+    ("walmart", 3.5, "Walmart Global Tech feels like its own company",
+     "Bengaluru tech center alone is 8,000+ engineers. Pace is corporate-stable. Pay competitive in-market.",
+     "Engineering", "current"),
+
+    # DoorDash
+    ("doordash", 3.4, "Merchant-side engineering is rewarding",
+     "Working on tools restaurants depend on. Direct user-facing feedback. Less glamorous than rider/consumer but high-impact.",
+     "Engineering", "current"),
+
+    # Slack
+    ("slack", 4.0, "Engineering investment in dev productivity is real",
+     "Build times, test infra, CI all get continuous attention. Quality of life on the codebase is visibly better than my last 2 jobs.",
+     "Engineering", "former"),
+
+    # Coinbase
+    ("coinbase", 3.8, "Compliance + engineering collaboration unusual",
+     "Engineering and compliance work tightly together. Onboarding includes a real intro to financial regulation. Useful career capital.",
+     "Engineering", "current"),
+
+    # Disney+/Twitch — additional employer reviews
+    ("youtube", 4.0, "Pay band stretches by sub-org",
+     "YouTube + YouTube Music + YouTube TV are different bands inside the same product family. Comp varies more than externally visible.",
+     "Product", "current"),
+
+    # TikTok
+    ("tiktok", 3.6, "Project velocity is the headline",
+     "Ship rate is unmatched. Reviews ship features in a week that take quarters elsewhere. Cost is the schedule.",
+     "Engineering", "current"),
+
+    # Snap
+    ("snap", 3.4, "Layoffs in 2022 reshaped the engineering org",
+     "Several waves. Surviving teams reset goals. Pay is competitive; tenure is shorter than peers.",
+     "Engineering", "former"),
+
+    # Discord
+    ("discord", 4.2, "Backend systems work is genuinely interesting",
+     "Voice infra + real-time messaging at this scale is a small set of companies. The technical problems are non-trivial.",
+     "Engineering", "current"),
+
+    # Linear
+    ("linear", 4.5, "Strong opinions, fast iteration",
+     "Founders are still product-active. PRDs are short. Feedback loops are hours, not weeks.",
+     "Engineering", "current"),
+
+    # MongoDB
+    ("mongodb", 4.0, "Atlas team has startup pace inside the public company",
+     "MongoDB Atlas (cloud) is genuinely faster-moving than the legacy DB team. Worth distinguishing in interviews.",
+     "Engineering", "current"),
+
+    # Snowflake
+    ("snowflake", 3.9, "Stock has been volatile post-IPO",
+     "Compensation packages with sizeable RSU components have seen big swings. Long-tenured people are still optimistic; new hires bid carefully.",
+     "Engineering", "former"),
+
+    # Databricks
+    ("databricks", 4.2, "Cofounders still hands-on",
+     "Matei + Ali still review technical direction directly. Rare for a $40B company.",
+     "Engineering", "current"),
+
+    # Datadog
+    ("datadog", 4.0, "NYC HQ benefits but distributed works",
+     "Strong NYC office presence + healthy remote distribution. Compensation skewed slightly toward NYC market.",
+     "Engineering", "former"),
+
+    # Twilio
+    ("twilio", 3.6, "Pre-layoff vs post-layoff is night and day",
+     "Engineering quality remains. Org energy and cross-team initiatives slowed visibly. Acceptable but not what it was.",
+     "Engineering", "former"),
+
+    # PagerDuty
+    ("pagerduty", 4.0, "Calm shop in an intense category",
+     "It's a bit of an irony — the incident management company has chill on-call internally. Process discipline pays off.",
+     "Engineering", "current"),
+
+    # Zoom
+    ("zoom", 3.3, "Cost-cutting era",
+     "Roles tightened post-pandemic. Workload increased while hiring slowed. Engineering quality remains; macro pressure is real.",
+     "Engineering", "current"),
+
+    # Hugging Face
+    ("hugging-face", 4.5, "Open-source mission isn't a marketing line",
+     "Engineers contribute to public model releases as core work. Career capital + product impact both substantial.",
+     "Engineering", "former"),
+
+    # YouTube/Twitch combined extra context covered above
+
     # Geico, State Farm
     ("geico", 3.4, "Adjuster role is steady but stressful",
      "Claims processing volume is high. Training is structured. Comp + benefits are corporate-class.",
@@ -1269,6 +1402,388 @@ SHOPPING_REVIEWS = [
     ("state-farm", 3.8, "Local agent relationships matter",
      "Bundled auto + home + life with one local agent. Premium is a tad higher than online-first carriers but service is more personal.",
      "Bundle policy", 0.0),
+
+    # --- Beef-up shopping reviews for newer companies ---
+
+    # Reddit (now has consumer subscription product)
+    ("reddit", 3.5, "Premium isn't worth it for me",
+     "Ad-free + r/lounge + 700 coins/month. Coins are useless. Ad-free is the only real value.",
+     "Reddit Premium", 5.99),
+    ("reddit", 3.8, "Mobile apps got better",
+     "Old reddit + Apollo are gone but the native app stabilized. Power-user features still missing.",
+     "Reddit free", 0.0),
+
+    # OpenAI (ChatGPT consumer + API)
+    ("openai", 4.3, "ChatGPT Plus is the productivity ROI",
+     "20/month for daily research + writing + coding help. Pays back in time saved within 24 hours of starting to use it.",
+     "ChatGPT Plus", 20.0),
+    ("openai", 4.5, "API pricing competitive",
+     "GPT-4 Mini + structured outputs make building product-quality features economic. Worth comparing per-token costs.",
+     "API usage", 0.0),
+    ("openai", 4.0, "Team plan gives data-privacy",
+     "Team + Enterprise plans include zero-retention defaults. Worth the per-seat bump if you're using it for work.",
+     "ChatGPT Team", 25.0),
+
+    # Adobe (Express + Acrobat extras)
+    ("adobe", 4.0, "Acrobat web is good enough for most",
+     "Free web Acrobat handles ~80% of what I used to need the desktop app for. Form filling + e-sign + small edits all work.",
+     "Acrobat free web", 0.0),
+
+    # Salesforce (smaller scope)
+    ("salesforce", 3.4, "Tableau acquisition still settling",
+     "Tableau prices haven't moved but the visible Salesforce integration is uneven. Older Tableau loyalists are wary.",
+     "Tableau Creator", 75.0),
+
+    # Disney+
+    ("disney-plus", 4.0, "Bundle with Hulu + ESPN+ is the value",
+     "$23/month for the trio. ESPN+ alone is worth it for sports fans; Hulu fills the network-TV gap.",
+     "Disney Bundle Trio Premium", 23.99),
+    ("disney-plus", 3.8, "4K + Dolby Atmos on premium tier",
+     "Audio + video quality is competitive with Netflix. Worth the premium tier for home-theater setups.",
+     "Disney+ Premium", 13.99),
+
+    # Hulu (additional)
+    ("hulu", 4.0, "On-demand library is the strongest catalog tier",
+     "Catch-up TV from major networks + Hulu Originals + back catalog. Live TV is the bonus, not the core.",
+     "Hulu (ads)", 7.99),
+    ("hulu", 3.6, "Ad load on the ad-supported tier is heavy",
+     "The free-tier ad load got noticeably heavier in 2024. Worth the upgrade if you watch more than a couple hours weekly.",
+     "Hulu No Ads", 17.99),
+
+    # HBO Max
+    ("hbo-max", 3.9, "Concurrent stream limits are tight",
+     "2 streams on standard; 4 on premium. Cheaper tiers force families to coordinate viewing time.",
+     "Max with Ads", 9.99),
+
+    # YouTube TV / Premium
+    ("youtube", 4.3, "YouTube TV unlimited DVR is the unlock",
+     "Unlimited cloud DVR + 6 accounts + local networks. Most cable replacements struggle on one of those; YouTube TV hits all three.",
+     "YouTube TV", 82.99),
+
+    # Twitch
+    ("twitch", 3.5, "Sub Tier 1 directly supports creators",
+     "Tier 1 sub = $5; creator gets ~$2.50. Direct support model is the appeal.",
+     "Tier 1 sub", 5.99),
+
+    # Paramount+
+    ("paramount-plus", 3.6, "Sports + originals balance",
+     "NFL games + CBS catalog + Showtime originals via the bundle. Worth it for sports fans.",
+     "Paramount+ Showtime", 12.99),
+
+    # Retail beef-up
+    ("best-buy", 3.9, "My Best Buy Plus membership decent for tech-heavy households",
+     "$50/year for free shipping + early access + extended returns. Pencils out if you buy 3+ items/year.",
+     "Best Buy Plus", 49.99),
+    ("best-buy", 3.7, "Total Tech tech-support membership",
+     "$200/year for unlimited Geek Squad support across all electronics. Useful for multi-device households.",
+     "Total Tech", 199.99),
+
+    ("home-depot", 4.1, "Pro Xtra discounts add up",
+     "Bulk rebate program + paint discounts + Pro Desk priority. Free to join + meaningful savings on regular spend.",
+     "Pro Xtra account", 0.0),
+    ("home-depot", 3.8, "Tool-rental program is underused",
+     "Day-rental on equipment from a Bosch SDS to power augers. Cheaper than buying for one project.",
+     "Tool rental", 80.0),
+
+    ("lowes", 3.8, "Military discount is real",
+     "10% off all purchases with verified ID. Stacks with sale prices in most cases.",
+     "Military discount", 0.0),
+    ("lowes", 3.6, "Online inventory accuracy varies by store",
+     "Listed in stock — wasn't there. Happens often enough that I call ahead for high-priority items.",
+     "In-store pickup", 250.0),
+
+    ("ikea", 4.0, "Family membership is free; perks are real",
+     "Free in-store coffee + member discounts + warranty extensions. No-brainer signup.",
+     "IKEA Family", 0.0),
+    ("ikea", 3.9, "As-Is section finds",
+     "Floor-model + customer-return section often has unbeatable prices. Worth checking on every visit.",
+     "As-Is sofa", 350.0),
+
+    ("kroger", 4.0, "Fuel Points compound surprisingly",
+     "Grocery spend → fuel discount. Easy 30¢-50¢/gallon during peak earning quarters.",
+     "Fuel points", 0.0),
+    ("kroger", 3.7, "Boost delivery membership is competitive",
+     "Free delivery on $35+ orders for $99/year. Cheaper than Instacart for regular grocery delivery.",
+     "Boost annual", 99.0),
+
+    ("whole-foods", 3.7, "365 store-brand value",
+     "365 Everyday Value brand cut average bill noticeably. Quality is consistently good.",
+     "365 brand purchases", 60.0),
+
+    ("cvs", 3.6, "Goodbye to receipts longer than I am tall",
+     "Digital receipts in the app finally killed the paper-tape jokes. Long-overdue UX fix.",
+     "Digital ExtraCare", 0.0),
+
+    ("walgreens", 3.4, "myWalgreens decent rewards",
+     "1% on most purchases + accelerated rewards on Walgreens-brand items. Worth signing up.",
+     "myWalgreens program", 0.0),
+
+    # Food
+    ("starbucks", 3.9, "Stars Rewards still works for daily drinkers",
+     "Tied to the daily latte habit. 25 stars for a free drink works out to ~5% return.",
+     "Rewards program", 0.0),
+    ("starbucks", 3.3, "Mobile order chaos at peak",
+     "Pre-ordered drinks pile up faster than baristas can produce them. 15+ min waits common.",
+     "Peak mobile order", 5.95),
+
+    ("mcdonalds", 3.7, "Breakfast menu cuts well",
+     "Egg McMuffin + hashbrown + coffee for $5 with app deals. Hard to beat for breakfast in a rush.",
+     "Breakfast combo", 5.49),
+    ("mcdonalds", 3.0, "Ice cream machine reliability still a meme",
+     "Down 3 of 5 visits this month. Not just my franchise — universal problem.",
+     "McFlurry attempt", 4.0),
+
+    ("chipotle", 3.6, "Portion sizes shrunk + bowls cost more",
+     "Same bowl that was $9 in 2019 is $12 in 2025 and visibly smaller. Quality remains; value dropped.",
+     "Bowl", 12.0),
+    ("chipotle", 4.1, "App + scan-loyalty works",
+     "Order ahead + Chipotle Rewards stack. Free entree every 12-15 orders.",
+     "Rewards program", 0.0),
+
+    ("dominos", 3.7, "Pizza Tracker still feels new in 2025",
+     "Step-by-step status updates remain a delight a decade after launch. Few competitors copied it well.",
+     "Online order", 22.0),
+
+    ("chick-fil-a", 4.4, "Catering for events flawless",
+     "Big party trays delivered on time, fresh, well-packed. Have used 5 times across two cities.",
+     "Catering order", 220.0),
+    ("chick-fil-a", 4.5, "Treats Day with rewards",
+     "Free items every 10ish visits via rewards. Realistic targets.",
+     "Rewards program", 0.0),
+
+    ("sweetgreen", 3.4, "Inconsistent across locations",
+     "Same bowl ingredients, different portion sizes by store. Some locations underweight.",
+     "Bowl variance", 17.0),
+
+    # Banks/finance beef-up
+    ("chase", 4.0, "Ultimate Rewards transfer partners",
+     "Hyatt + United + Hyatt transfers can yield 2-3x value over straight cashback. Pays for the Sapphire fee.",
+     "UR transfer", 0.0),
+    ("chase", 3.7, "Branch experience varies wildly",
+     "Manhattan branch — efficient. Suburban branch — 40-min waits common.",
+     "Branch visit", 0.0),
+
+    ("bank-of-america", 3.6, "Travel Rewards card no foreign fees",
+     "Free annual fee + 1.5x points + no FX fees. Strong starter travel card.",
+     "Travel Rewards", 0.0),
+
+    ("wells-fargo", 3.2, "Active Cash 2% on everything",
+     "Simple, no annual fee, no categories. Best of their card lineup.",
+     "Active Cash", 0.0),
+
+    ("american-express", 4.0, "Platinum benefits if you actually use credits",
+     "$695 annual fee. Pencils out if you'd use Centurion lounges, Uber credits, hotel credits anyway. Otherwise the Gold is the better fit.",
+     "Platinum", 695.0),
+    ("american-express", 3.8, "Customer service still industry-leading",
+     "Disputes get resolved in 48 hours typically. Phone support actually picks up.",
+     "Card services", 0.0),
+
+    ("charles-schwab", 4.4, "Brokerage migration painless",
+     "TD Ameritrade → Schwab transition handled cleanly for my account. ThinkOrSwim platform preserved.",
+     "Brokerage", 0.0),
+
+    ("vanguard", 4.3, "Tax-managed funds for high-income earners",
+     "VTMSX + VTMGX for taxable accounts. Hard to beat for after-tax returns.",
+     "VTMSX", 0.0),
+
+    ("fidelity", 4.1, "Cash management account is the secret weapon",
+     "Free everything, ATM fee reimbursements, brokerage-attached. Comparable to Schwab.",
+     "Cash Management", 0.0),
+
+    # Airlines beef-up
+    ("delta", 3.9, "Comfort+ is the right value tier",
+     "Extra legroom + free booze + priority boarding. Mid-haul flights make it worth the upgrade.",
+     "Comfort+ upgrade", 80.0),
+    ("delta", 3.5, "MQM/MQD changes hurt",
+     "Status earning shifted to revenue-only. Cheap-fare-frequent-flyer model died in 2024.",
+     "SkyMiles Diamond", 0.0),
+
+    ("united", 3.6, "Polaris longhaul vs Polaris transcon",
+     "Longhaul has the suite; transcon has the seat with old configs. Different products, same brand.",
+     "Polaris longhaul", 0.0),
+
+    ("american-airlines", 3.4, "Flagship First on the 777-300",
+     "Limited routes but the product is excellent. Worth chasing if you can plan around routing.",
+     "Flagship First", 0.0),
+
+    ("southwest", 3.4, "Boarding changes coming",
+     "Open seating model changing in 2026. Whether that's a positive or negative depends on whether you played the bidding game.",
+     "Standard ticket", 200.0),
+
+    ("jetblue", 3.7, "TrueBlue points are flexible",
+     "No blackout dates, dynamic pricing. Award sweet spots exist but require some attention.",
+     "TrueBlue Mosaic", 0.0),
+
+    ("alaska-airlines", 4.0, "Premium Class is the under-rated economy tier",
+     "Coach + with 4 inches more legroom + free booze. Common upgrade target.",
+     "Premium Class", 100.0),
+
+    # Hotels
+    ("marriott", 3.8, "Bonvoy Brilliant card credits stack",
+     "$650/year fee. $300 dining + $25 statement + free night = pencils out easily.",
+     "Bonvoy Brilliant", 650.0),
+
+    ("hilton", 4.0, "Aspire card delivers if you travel",
+     "$550/year, includes $200 airline credit + $250 Hilton resort + Diamond status. Many travel families profit.",
+     "Aspire", 550.0),
+
+    ("hyatt", 4.4, "Category-1 award redemptions still strong",
+     "Free-night certificates + sweet spot redemptions remain. Lowest-cost luxury hotel program.",
+     "World of Hyatt Globalist", 0.0),
+
+    # Auto beef-up
+    ("toyota", 4.3, "Tundra hybrid update + transmission concern",
+     "Long-term reliability on iForce Max transmission is unproven. Otherwise solid full-size pickup.",
+     "Tundra Hybrid", 64000.0),
+
+    ("ford", 3.8, "Mustang Mach-E is a polished EV",
+     "Driving experience + range improved with the 2024 refresh. Software remains a weak point compared to Tesla.",
+     "Mustang Mach-E", 48000.0),
+    ("ford", 4.0, "F-150 Lightning quietly excellent",
+     "Lower hype + good real-world EV truck. Towing range is the constraint.",
+     "Lightning Lariat", 70000.0),
+
+    ("honda", 4.5, "CR-V hybrid 1-year long-term",
+     "Average 38 mpg. Reliable, comfortable, value-driven. The default-good-choice SUV.",
+     "CR-V Hybrid Touring", 38000.0),
+
+    ("bmw", 3.8, "iX EV — polarizing styling, great drive",
+     "If you can handle the look, the drive is unmatched at the price point.",
+     "iX xDrive50", 88000.0),
+
+    # Telecom beef-up
+    ("verizon", 3.4, "5G UWB strong in dense cities",
+     "Ultra Wideband performance in Manhattan is incredible. Outside cities, mid-band 5G is similar to competitors.",
+     "Unlimited Ultimate", 100.0),
+
+    ("att", 3.6, "Fiber outage uptime is excellent",
+     "1Gbps fiber for 28 months — total outage time under 4 hours. Better than my prior cable provider.",
+     "Fiber 1 Gig", 80.0),
+
+    ("t-mobile", 3.7, "Travel benefits underrated",
+     "Free 5GB in 215+ countries + free in-flight Wi-Fi on US airlines. Worth it for frequent travelers.",
+     "Magenta Max + Travel", 100.0),
+
+    ("xfinity", 3.0, "Speed delivered, support did not",
+     "Got the 1Gbps tier as advertised. Two billing disputes took multiple calls each to resolve.",
+     "1 Gbps internet", 90.0),
+
+    # Hardware beef-up
+    ("sony", 4.0, "A7 IV camera worth the upgrade",
+     "Replacement for A7 III. Better autofocus, video specs, ergonomics. Holds resale value.",
+     "Alpha 7 IV body", 2500.0),
+    ("sony", 4.3, "PS5 + console exclusives",
+     "Spider-Man 2 + GoW Ragnarok justify the platform. PS5 Pro upgrade marginal.",
+     "PS5 + games", 700.0),
+
+    ("samsung", 3.6, "Frame TV — looks great, mid TV",
+     "Wife-approved aesthetics. Picture quality fine but not OLED-class. Worth it for living-room placement.",
+     "Frame 55\"", 1500.0),
+    ("samsung", 4.2, "Galaxy Watch6 Pro for fitness",
+     "Better Android-side smartwatch than Pixel Watch. Multi-day battery on conservative settings.",
+     "Galaxy Watch6 Pro", 400.0),
+
+    ("lg", 4.5, "OLED G3 better than C-series for bright rooms",
+     "MicroLens Array boosts brightness meaningfully. Worth the premium if your room has windows.",
+     "OLED G3 65\"", 2500.0),
+    ("lg", 4.0, "Gram laptops underrated for travel",
+     "1.5lb laptop with a real screen. Battery life all-day. Build quality below Mac but more than acceptable.",
+     "Gram 16", 1300.0),
+
+    ("sonos", 3.7, "App rewrite was painful",
+     "2024 app rebuild broke functionality for months. Hardware remained great; software trust took a hit.",
+     "App-related outage", 0.0),
+    ("sonos", 4.2, "Era 300 spatial audio surprisingly good",
+     "Dolby Atmos music on a single speaker — works better than expected. Pair with Beam for spatial home theater.",
+     "Era 300", 449.0),
+
+    ("dell", 3.7, "Premier Support tier worth it for biz",
+     "Onsite next-day for enterprise SKUs. Consumer support is a different (worse) experience.",
+     "Premier Support", 0.0),
+    ("dell", 3.4, "Monitors are the consistent strong product",
+     "UltraSharp line is reliably good. P + S series consumer monitors more variable.",
+     "UltraSharp U2723QE", 600.0),
+
+    ("hp", 3.3, "OMEN gaming line is the strongest consumer SKU",
+     "Pavilion is mid; OMEN gaming laptops + desktops compete with Alienware at lower price points.",
+     "OMEN 17", 1700.0),
+    ("hp", 3.4, "Spectre x360 holds up",
+     "3-year-old Spectre still fast + battery healthy. Build quality consistent year over year.",
+     "Spectre x360", 1500.0),
+
+    # Social beef-up
+    ("pinterest", 3.5, "Search ads are clearly visible",
+     "Sponsored results blend in with organic less than other platforms. Easier to skip if you want to.",
+     "Free use", 0.0),
+
+    ("tiktok", 3.2, "Shop integration aggressive",
+     "TikTok Shop sits front-and-center in the feed now. UX feels like Amazon ads but more invasive.",
+     "Shop browsing", 0.0),
+
+    ("snap", 3.6, "Snapchat+ niche but works for power users",
+     "Custom emoji + Bitmoji backgrounds + AI features. Real value for daily users.",
+     "Snapchat+ year", 47.88),
+
+    ("discord", 4.0, "Server boosting tier feels like a tax",
+     "Want better audio quality + emoji slots? Two server boosts. Niche cost for active community owners.",
+     "Server boosting", 5.0),
+
+    ("x-twitter", 2.8, "Algorithm change for non-Premium users hurts reach",
+     "Non-Premium posts get visibly lower distribution. Whether that's worth $8/month is up to you.",
+     "Premium subscription", 8.0),
+
+    # Dev SaaS beef-up
+    ("linear", 4.5, "Linear's roadmap is shipping",
+     "Triage views + cycles + initiatives — features actually land in the product reliably.",
+     "Standard plan", 8.0),
+
+    ("mongodb", 3.8, "Vector search is competitive",
+     "Atlas Vector Search lets you skip standing up a separate vector DB. Worth the convenience.",
+     "Atlas + Vector", 0.0),
+
+    ("snowflake", 3.9, "Cortex AI functions",
+     "Built-in LLM functions over warehouse data. Cheaper to build than wiring up a separate AI pipeline.",
+     "Cortex usage", 0.0),
+
+    ("databricks", 4.0, "Unity Catalog cleaned up data governance",
+     "Cross-workspace governance + lineage. Made our data-platform compliance review pass on the first try.",
+     "Unity Catalog", 0.0),
+
+    ("datadog", 4.0, "RUM + Synthetics combo",
+     "Real-user monitoring + synthetics in one. Easier than maintaining separate tools.",
+     "RUM + Synthetics", 0.0),
+
+    ("twilio", 3.8, "Segment integration worth the bill",
+     "Customer-data platform unification + telecom. The integrated platform pitch is real for marketing-heavy stacks.",
+     "Segment Team", 120.0),
+
+    ("pagerduty", 4.2, "AIOps add-on getting useful",
+     "Noise suppression + grouped incidents finally feel data-driven, not heuristic.",
+     "Business + AIOps", 30.0),
+
+    ("zoom", 3.8, "Workplace bundle includes mail + calendar",
+     "Mail + calendar product is unexpectedly competent. Worth a look if you'd consolidate vendors.",
+     "Zoom Workplace", 21.99),
+
+    ("hugging-face", 4.3, "Inference Endpoints pricing competitive",
+     "Hosted model inference at per-second billing. Easier than building deploy pipelines for early-stage products.",
+     "Inference Endpoint", 0.0),
+
+    # Insurance beef-up
+    ("geico", 3.5, "Renters add-on is the real value",
+     "Auto + renters bundled drops bill another ~10%. Renters policy alone is $15/month.",
+     "Auto + Renters bundle", 0.0),
+    ("geico", 3.4, "Claims via the app worked smoothly",
+     "Fender-bender claim filed via the app — photos, ID submitted, adjuster contact within 24 hours.",
+     "Claim experience", 0.0),
+
+    ("progressive", 3.8, "Snapshot saves with safe driving",
+     "Telematics-based discount after 90 days. Realistic 10-20% savings for actually safe drivers.",
+     "Snapshot enrollment", 0.0),
+
+    ("state-farm", 3.7, "Drive Safe & Save app",
+     "Telematics + safe-driving rewards. App is rougher than competitors but the underlying discount works.",
+     "Drive Safe & Save", 0.0),
 
     # REI
     ("rei", 4.5, "Co-op return policy is real",
