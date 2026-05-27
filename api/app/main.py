@@ -1,3 +1,6 @@
+import logging
+import os
+import re
 from contextlib import asynccontextmanager
 from datetime import datetime
 from collections import Counter
@@ -7,9 +10,22 @@ from uuid import uuid4
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from sqlmodel import Session, select, or_
+
+_log = logging.getLogger("true_review.main")
+
+
+def _forwarded_ip(request: Request) -> str:
+    """Use the original client IP from X-Forwarded-For so rate limiting
+    survives Railway's reverse proxy (which otherwise gives every request
+    a different ephemeral 100.64.x.x source address)."""
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
 
 from .config import get_settings
 from .db import init_db, get_session, engine
@@ -51,7 +67,7 @@ from .models import EmailVerification  # noqa: F401 — registers table
 
 settings = get_settings()
 
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=_forwarded_ip)
 
 
 @asynccontextmanager
@@ -106,7 +122,9 @@ async def security_headers(request: Request, call_next):
     try:
         response = await call_next(request)
     except Exception:
-        # SI-11: never leak stack traces to clients
+        # SI-11: never leak stack traces to clients. We DO log the full
+        # traceback server-side so failures stay diagnosable.
+        _log.exception("Unhandled exception while processing %s %s", request.method, request.url.path)
         from fastapi.responses import JSONResponse
         response = JSONResponse({"error": "internal_error"}, status_code=500)
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -529,11 +547,7 @@ def _otp() -> str:
 def _hash(value: str) -> str:
     import hashlib
     salt = os.environ.get("VERIFY_HASH_SALT", "true-review-verify-salt-rotate-me")
-    import hashlib as _h
-    return _h.sha256(f"{salt}::{value}".encode()).hexdigest()
-
-
-import os  # noqa: E402
+    return hashlib.sha256(f"{salt}::{value}".encode()).hexdigest()
 
 @app.post("/verify/email/start")
 @limiter.limit("3/minute;15/day")
@@ -562,7 +576,7 @@ async def verify_email_start(
             "Free webmail domains (gmail, yahoo, etc.) are not accepted for T1 verification. "
             "Use your work email.",
         )
-    if not re.match(r"^[a-zA-Z0-9.-]{3,253}$", domain):
+    if not re.fullmatch(r"[a-zA-Z0-9.-]{3,253}", domain):
         raise HTTPException(400, "Invalid domain")
 
     company_name = None
@@ -615,10 +629,9 @@ async def verify_email_confirm(
     session: Session = Depends(get_session),
 ):
     """Confirm OTP. Body: { token, otp }"""
-    import re as _re
     token = sanitize_text((body or {}).get("token", ""), max_len=64)
     otp = sanitize_text((body or {}).get("otp", ""), max_len=12).strip()
-    if not token or not _re.fullmatch(r"\d{6}", otp):
+    if not token or not re.fullmatch(r"\d{6}", otp):
         raise HTTPException(400, "token and 6-digit otp required")
 
     rec = session.exec(select(EmailVerification).where(EmailVerification.token == token)).first()
@@ -630,6 +643,7 @@ async def verify_email_confirm(
         raise HTTPException(410, "verification expired")
     if rec.attempts >= 5:
         raise HTTPException(429, "too many attempts")
+    import re as _re
 
     rec.attempts += 1
     if _hash(otp) != rec.otp_hash:
