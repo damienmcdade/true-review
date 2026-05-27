@@ -4,10 +4,9 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Send, AlertTriangle, Briefcase, ShoppingBag } from 'lucide-react';
 import clsx from 'clsx';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 type ReviewType = 'employment' | 'shopping' | 'scam_report';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const SCAM_CATEGORIES = [
   ['non_delivery', 'Non-delivery'],
@@ -31,7 +30,7 @@ export default function ReviewForm({ className }: { className?: string }) {
   const [product, setProduct] = useState('');
   const [scamCategory, setScamCategory] = useState<string>('non_delivery');
   const [moneyLost, setMoneyLost] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
   function slugify(s: string): string {
@@ -46,12 +45,12 @@ export default function ReviewForm({ className }: { className?: string }) {
     e.preventDefault();
     setError(null);
     if (body.trim().length < 20) {
-      setError('Review body must be at least 20 characters.');
+      setError({ status: null, kind: 'client', message: 'Review body must be at least 20 characters.' });
       return;
     }
     const slug = slugify(companySlug);
     if (!slug) {
-      setError('Please enter a company name.');
+      setError({ status: null, kind: 'client', message: 'Please enter a company name.' });
       return;
     }
     const payload: Record<string, unknown> = {
@@ -69,21 +68,15 @@ export default function ReviewForm({ className }: { className?: string }) {
     }
 
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/reviews`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          setError(`Submission failed: ${txt.slice(0, 200)}`);
-          return;
-        }
-        router.push(`/c/${slug}` as never);
-      } catch {
-        setError('Could not reach the API.');
+      const { data, error } = await apiFetch<{ id: string }>('/reviews', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      if (error) {
+        setError(error);
+        return;
       }
+      if (data) router.push(`/c/${slug}` as never);
     });
   }
 
@@ -194,7 +187,7 @@ export default function ReviewForm({ className }: { className?: string }) {
 
       {error ? (
         <p className="mt-4 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
-          {error}
+          {error.message}
         </p>
       ) : null}
 

@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { AlertTriangle, ShieldCheck, Loader2, Search } from 'lucide-react';
 import clsx from 'clsx';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 type ScamResult = {
   domain: string;
@@ -26,12 +27,10 @@ type ScamResult = {
   };
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export default function ScamCheckForm({ className }: { className?: string }) {
   const [domain, setDomain] = useState('');
   const [result, setResult] = useState<ScamResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent) {
@@ -44,22 +43,15 @@ export default function ScamCheckForm({ className }: { className?: string }) {
       .replace(/^https?:\/\//, '')
       .split('/')[0];
     if (cleaned.length < 3 || !cleaned.includes('.')) {
-      setError('Enter a valid domain like example.com');
+      setError({ status: null, kind: 'client', message: 'Enter a valid domain like example.com' });
       return;
     }
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/scam-check?domain=${encodeURIComponent(cleaned)}`, {
-          cache: 'no-store'
-        });
-        if (!res.ok) {
-          setError(`API error ${res.status}`);
-          return;
-        }
-        setResult((await res.json()) as ScamResult);
-      } catch {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<ScamResult>(
+        `/scam-check?domain=${encodeURIComponent(cleaned)}`
+      );
+      if (error) setError(error);
+      if (data) setResult(data);
     });
   }
 
@@ -88,7 +80,7 @@ export default function ScamCheckForm({ className }: { className?: string }) {
 
       {error ? (
         <div className="mt-5 rounded-2xl border border-danger/30 bg-danger/5 p-4 text-sm text-danger">
-          {error}
+          {error.message}
         </div>
       ) : null}
 

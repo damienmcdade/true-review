@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Loader2, Send, Sparkles } from 'lucide-react';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 type AnswerResponse = {
   answer: string;
@@ -9,10 +10,7 @@ type AnswerResponse = {
   source: string;
   model: string;
   context_used: number;
-  error?: string;
 };
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const SUGGESTIONS = [
   'How is the work-life balance?',
@@ -32,27 +30,20 @@ export default function AskBox({
 }) {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<AnswerResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
   async function ask(q: string) {
     setError(null);
     setAnswer(null);
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/ai/ask`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q, company_slug: companySlug, limit: 60 })
-        });
-        if (!res.ok) {
-          setError(`API error ${res.status}`);
-          return;
-        }
-        setAnswer((await res.json()) as AnswerResponse);
-      } catch {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<AnswerResponse>('/ai/ask', {
+        method: 'POST',
+        body: JSON.stringify({ question: q, company_slug: companySlug, limit: 60 }),
+        timeoutMs: 40_000
+      });
+      if (error) setError(error);
+      if (data) setAnswer(data);
     });
   }
 
@@ -61,7 +52,7 @@ export default function AskBox({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (question.trim()) ask(question.trim());
+          if (question.trim()) void ask(question.trim());
         }}
       >
         <textarea
@@ -79,7 +70,7 @@ export default function AskBox({
                 type="button"
                 onClick={() => {
                   setQuestion(s);
-                  ask(s);
+                  void ask(s);
                 }}
                 className="rounded-full bg-white/60 px-3 py-1 text-xs text-ink/70 hover:bg-white"
               >
@@ -100,7 +91,23 @@ export default function AskBox({
 
       {error ? (
         <div className="mt-5 rounded-2xl border border-danger/30 bg-danger/5 p-4 text-sm text-danger">
-          {error}
+          <div className="font-semibold">
+            {error.kind === 'rate_limit'
+              ? 'Slow down'
+              : error.kind === 'timeout'
+                ? 'Request timed out'
+                : error.kind === 'network'
+                  ? 'Network issue'
+                  : 'Something went wrong'}
+          </div>
+          <p className="mt-1 text-ink/70">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void ask(question.trim())}
+            className="mt-3 rounded-full border border-ink/15 bg-white/60 px-3 py-1 text-xs font-medium text-ink hover:bg-white"
+          >
+            Retry
+          </button>
         </div>
       ) : null}
 

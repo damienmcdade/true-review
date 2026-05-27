@@ -2,8 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Loader2, Send } from 'lucide-react';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 export default function NoticeForm({ className }: { className?: string }) {
   const [reviewId, setReviewId] = useState('');
@@ -11,36 +10,32 @@ export default function NoticeForm({ className }: { className?: string }) {
   const [details, setDetails] = useState('');
   const [contact, setContact] = useState('');
   const [done, setDone] = useState<{ status: string } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (details.trim().length < 20) {
-      setError('Please describe the problem in at least 20 characters.');
+      setError({
+        status: null,
+        kind: 'client',
+        message: 'Please describe the problem in at least 20 characters.'
+      });
       return;
     }
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/notice-action`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            review_id: reviewId.trim(),
-            reason,
-            details: details.trim(),
-            reporter_contact: contact.trim()
-          })
-        });
-        if (!res.ok) {
-          setError(`API error ${res.status}`);
-          return;
-        }
-        setDone((await res.json()) as { status: string });
-      } catch {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<{ status: string }>('/notice-action', {
+        method: 'POST',
+        body: JSON.stringify({
+          review_id: reviewId.trim(),
+          reason,
+          details: details.trim(),
+          reporter_contact: contact.trim()
+        })
+      });
+      if (error) setError(error);
+      if (data) setDone(data);
     });
   }
 
@@ -105,7 +100,7 @@ export default function NoticeForm({ className }: { className?: string }) {
 
       {error ? (
         <p className="mt-4 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
-          {error}
+          {error.message}
         </p>
       ) : null}
 

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Sparkles, Search, AlertTriangle, Loader2 } from 'lucide-react';
 import clsx from 'clsx';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 type SearchResult = {
   query: string;
@@ -20,35 +20,30 @@ type SearchResult = {
   summary: { answer: string; citations: number[]; source: string; model: string };
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export default function AiSearch({ className }: { className?: string }) {
-  const router = useRouter();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<SearchResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
+  async function run(q: string) {
     setError(null);
     setResult(null);
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/ai/search?q=${encodeURIComponent(q)}`, {
-          cache: 'no-store'
-        });
-        if (!res.ok) {
-          setError(`API error ${res.status}`);
-          return;
-        }
-        setResult((await res.json()) as SearchResult);
-      } catch (e) {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<SearchResult>(
+        `/ai/search?q=${encodeURIComponent(q)}`,
+        { timeoutMs: 40_000 }
+      );
+      if (error) setError(error);
+      if (data) setResult(data);
     });
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    void run(q);
   }
 
   return (
@@ -59,7 +54,7 @@ export default function AiSearch({ className }: { className?: string }) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Try “Is Patagonia a fair employer?” or “Reports of fraud at quickrich-invest-xyz”"
+          placeholder='Try "Is Patagonia a fair employer?" or "Reports of fraud at quickrich-invest"'
           className="w-full rounded-full border border-white/60 bg-white/80 px-12 py-3.5 text-ink shadow-sm outline-none placeholder:text-ink/40 focus:border-ocean"
           autoFocus
         />
@@ -74,14 +69,36 @@ export default function AiSearch({ className }: { className?: string }) {
       </form>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs text-ink/60">
-        <SuggestionChip onPick={setQuery}>Is Stripe a good place to work?</SuggestionChip>
-        <SuggestionChip onPick={setQuery}>Patagonia warranty experience</SuggestionChip>
-        <SuggestionChip onPick={setQuery}>Reports of phishing at primedealsdirect-xy</SuggestionChip>
+        <SuggestionChip onPick={(s) => { setQuery(s); void run(s); }}>
+          Is Stripe a good place to work?
+        </SuggestionChip>
+        <SuggestionChip onPick={(s) => { setQuery(s); void run(s); }}>
+          Patagonia warranty experience
+        </SuggestionChip>
+        <SuggestionChip onPick={(s) => { setQuery(s); void run(s); }}>
+          Reports of phishing
+        </SuggestionChip>
       </div>
 
       {error ? (
         <div className="mt-5 rounded-2xl border border-danger/30 bg-danger/5 p-4 text-sm text-danger">
-          {error}
+          <div className="font-semibold">
+            {error.kind === 'rate_limit'
+              ? 'Slow down'
+              : error.kind === 'timeout'
+                ? 'Request timed out'
+                : error.kind === 'network'
+                  ? 'Network issue'
+                  : 'Something went wrong'}
+          </div>
+          <p className="mt-1 text-ink/70">{error.message}</p>
+          <button
+            type="button"
+            onClick={() => void run(query)}
+            className="mt-3 rounded-full border border-ink/15 bg-white/60 px-3 py-1 text-xs font-medium text-ink hover:bg-white"
+          >
+            Retry
+          </button>
         </div>
       ) : null}
 

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Loader2, Send, ShieldCheck, AlertCircle } from 'lucide-react';
+import { apiFetch, type ApiError } from '@/lib/api';
 
 type StartResp = {
   token: string;
@@ -19,40 +20,29 @@ type ConfirmResp = {
   tier: string;
 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
 export default function VerifyEmailFlow({ className }: { className?: string }) {
   const [email, setEmail] = useState('');
   const [companySlug, setCompanySlug] = useState('');
   const [started, setStarted] = useState<StartResp | null>(null);
   const [otp, setOtp] = useState('');
   const [done, setDone] = useState<ConfirmResp | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [pending, startTransition] = useTransition();
 
   function startVerify(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError('Enter a valid email address.');
+      setError({ status: null, kind: 'client', message: 'Enter a valid email address.' });
       return;
     }
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/verify/email/start`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, company_slug: companySlug || undefined })
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          setError(txt.slice(0, 300));
-          return;
-        }
-        setStarted((await res.json()) as StartResp);
-      } catch {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<StartResp>('/verify/email/start', {
+        method: 'POST',
+        body: JSON.stringify({ email, company_slug: companySlug || undefined })
+      });
+      if (error) setError(error);
+      if (data) setStarted(data);
     });
   }
 
@@ -60,26 +50,17 @@ export default function VerifyEmailFlow({ className }: { className?: string }) {
     e.preventDefault();
     setError(null);
     if (!/^\d{6}$/.test(otp)) {
-      setError('OTP must be 6 digits.');
+      setError({ status: null, kind: 'client', message: 'OTP must be 6 digits.' });
       return;
     }
     if (!started) return;
     startTransition(async () => {
-      try {
-        const res = await fetch(`${API}/verify/email/confirm`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: started.token, otp })
-        });
-        if (!res.ok) {
-          const txt = await res.text();
-          setError(txt.slice(0, 300));
-          return;
-        }
-        setDone((await res.json()) as ConfirmResp);
-      } catch {
-        setError('Could not reach the API.');
-      }
+      const { data, error } = await apiFetch<ConfirmResp>('/verify/email/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ token: started.token, otp })
+      });
+      if (error) setError(error);
+      if (data) setDone(data);
     });
   }
 
@@ -131,7 +112,7 @@ export default function VerifyEmailFlow({ className }: { className?: string }) {
 
         {error ? (
           <p className="mt-3 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
-            {error}
+            {error.message}
           </p>
         ) : null}
 
@@ -187,7 +168,7 @@ export default function VerifyEmailFlow({ className }: { className?: string }) {
 
       {error ? (
         <p className="mt-3 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
-          {error}
+          {error.message}
         </p>
       ) : null}
 
