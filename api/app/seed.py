@@ -99,6 +99,97 @@ SAMPLE_COMPANIES = [
     {"name": "Atlassian", "slug": "atlassian", "kind": "both", "domain": "atlassian.com",
      "description": "Jira, Confluence, Trello, Bitbucket."},
 
+    # --- Streaming + media ---
+    {"name": "Disney+", "slug": "disney-plus", "kind": "merchant", "domain": "disneyplus.com", "description": "Disney/Marvel/Star Wars/National Geographic streaming."},
+    {"name": "Hulu", "slug": "hulu", "kind": "merchant", "domain": "hulu.com", "description": "Streaming with live TV options."},
+    {"name": "HBO Max", "slug": "hbo-max", "kind": "merchant", "domain": "max.com", "description": "Warner Bros. Discovery streaming (Max)."},
+    {"name": "YouTube", "slug": "youtube", "kind": "both", "domain": "youtube.com", "description": "Google's video platform; YouTube TV + Premium."},
+    {"name": "Twitch", "slug": "twitch", "kind": "both", "domain": "twitch.tv", "description": "Amazon-owned live-streaming platform."},
+    {"name": "Paramount+", "slug": "paramount-plus", "kind": "merchant", "domain": "paramountplus.com", "description": "Paramount streaming (CBS, MTV, etc.)."},
+
+    # --- Retail (big-box + grocery + hardware) ---
+    {"name": "Best Buy", "slug": "best-buy", "kind": "both", "domain": "bestbuy.com", "description": "Consumer electronics retailer."},
+    {"name": "Home Depot", "slug": "home-depot", "kind": "both", "domain": "homedepot.com", "description": "Home improvement retailer."},
+    {"name": "Lowe's", "slug": "lowes", "kind": "both", "domain": "lowes.com", "description": "Home improvement retailer."},
+    {"name": "IKEA", "slug": "ikea", "kind": "merchant", "domain": "ikea.com", "description": "Flat-pack furniture retailer."},
+    {"name": "Kroger", "slug": "kroger", "kind": "both", "domain": "kroger.com", "description": "US supermarket chain."},
+    {"name": "Whole Foods", "slug": "whole-foods", "kind": "both", "domain": "wholefoodsmarket.com", "description": "Amazon-owned natural/organic grocer."},
+    {"name": "CVS", "slug": "cvs", "kind": "both", "domain": "cvs.com", "description": "Drugstore + pharmacy chain."},
+    {"name": "Walgreens", "slug": "walgreens", "kind": "both", "domain": "walgreens.com", "description": "Drugstore chain."},
+
+    # --- Food / restaurants ---
+    {"name": "Starbucks", "slug": "starbucks", "kind": "both", "domain": "starbucks.com", "description": "Global coffee chain."},
+    {"name": "McDonald's", "slug": "mcdonalds", "kind": "both", "domain": "mcdonalds.com", "description": "Global fast food chain."},
+    {"name": "Chipotle", "slug": "chipotle", "kind": "both", "domain": "chipotle.com", "description": "Fast-casual Mexican-inspired chain."},
+    {"name": "Domino's", "slug": "dominos", "kind": "both", "domain": "dominos.com", "description": "Pizza delivery chain."},
+    {"name": "Chick-fil-A", "slug": "chick-fil-a", "kind": "both", "domain": "chick-fil-a.com", "description": "Chicken fast food chain."},
+    {"name": "Sweetgreen", "slug": "sweetgreen", "kind": "both", "domain": "sweetgreen.com", "description": "Fast-casual salad chain."},
+
+    # --- Banks + finance ---
+    {"name": "Chase", "slug": "chase", "kind": "both", "domain": "chase.com", "description": "JPMorgan Chase consumer bank."},
+    {"name": "Bank of America", "slug": "bank-of-america", "kind": "both", "domain": "bankofamerica.com", "description": "Consumer + commercial bank."},
+    {"name": "Wells Fargo", "slug": "wells-fargo", "kind": "both", "domain": "wellsfargo.com", "description": "Consumer + commercial bank."},
+    {"name": "American Express", "slug": "american-express", "kind": "both", "domain": "americanexpress.com", "description": "Card issuer + financial services."},
+    {"name": "Charles Schwab", "slug": "charles-schwab", "kind": "both", "domain": "schwab.com", "description": "Brokerage + retail banking."},
+    {"name": "Vanguard", "slug": "vanguard", "kind": "both", "domain": "vanguard.com", "description": "Mutual fund + ETF asset manager."},
+    {"name": "Fidelity", "slug": "fidelity", "kind": "both", "domain": "fidelity.com", "description": "Brokerage + retirement services."},
+
+    # --- Airlines ---
+    {"name": "Delta", "slug": "delta", "kind": "both", "domain": "delta.com", "description": "Major US airline."},
+    {"name": "United Airlines", "slug": "united", "kind": "both", "domain": "united.com", "description": "Major US airline."},
+    {"name": "American Airlines", "slug": "american-airlines", "kind": "both", "domain": "aa.com", "description": "Major US airline."},
+    {"name": "Southwest", "slug": "southwest", "kind": "both", "domain": "southwest.com", "description": "US low-cost airline."},
+    {"name": "JetBlue", "slug": "jetblue", "kind": "both", "domain": "jetblue.com", "description": "US airline focused on East Coast hubs."},
+    {"name": "Alaska Airlines", "slug": "alaska-airlines", "kind": "both", "domain": "alaskaair.com", "description": "West-coast-focused US airline."},
+
+    # --- Hotels ---
+    {"name": "Marriott", "slug": "marriott", "kind": "both", "domain": "marriott.com", "description": "Global hotel chain."},
+    {"name": "Hilton", "slug": "hilton", "kind": "both", "domain": "hilton.com", "description": "Global hotel chain."},
+    {"name": "Hyatt", "slug": "hyatt", "kind": "both", "domain": "hyatt.com", "description": "Global hotel chain."},
+
+    # --- Auto ---
+    {"name": "Toyota", "slug": "toyota", "kind": "both", "domain": "toyota.com", "description": "Japanese auto manufacturer."},
+    {"name": "Ford", "slug": "ford", "kind": "both", "domain": "ford.com", "description": "US auto manufacturer."},
+    {"name": "Honda", "slug": "honda", "kind": "both", "domain": "honda.com", "description": "Japanese auto manufacturer."},
+    {"name": "BMW", "slug": "bmw", "kind": "both", "domain": "bmw.com", "description": "German luxury auto manufacturer."},
+
+    # --- Telecom ---
+    {"name": "Verizon", "slug": "verizon", "kind": "both", "domain": "verizon.com", "description": "US wireless + fiber carrier."},
+    {"name": "AT&T", "slug": "att", "kind": "both", "domain": "att.com", "description": "US telecom carrier."},
+    {"name": "T-Mobile", "slug": "t-mobile", "kind": "both", "domain": "t-mobile.com", "description": "US wireless carrier."},
+    {"name": "Comcast Xfinity", "slug": "xfinity", "kind": "both", "domain": "xfinity.com", "description": "Comcast cable internet + TV."},
+
+    # --- Hardware brands ---
+    {"name": "Sony", "slug": "sony", "kind": "both", "domain": "sony.com", "description": "Consumer electronics + PlayStation."},
+    {"name": "Samsung", "slug": "samsung", "kind": "both", "domain": "samsung.com", "description": "Consumer electronics + appliances."},
+    {"name": "LG", "slug": "lg", "kind": "both", "domain": "lg.com", "description": "Consumer electronics + appliances."},
+    {"name": "Sonos", "slug": "sonos", "kind": "both", "domain": "sonos.com", "description": "Wireless audio systems."},
+    {"name": "Dell", "slug": "dell", "kind": "both", "domain": "dell.com", "description": "PCs, servers, displays."},
+    {"name": "HP", "slug": "hp", "kind": "both", "domain": "hp.com", "description": "PCs, printers, services."},
+
+    # --- Social / consumer apps ---
+    {"name": "Pinterest", "slug": "pinterest", "kind": "both", "domain": "pinterest.com", "description": "Visual discovery platform."},
+    {"name": "TikTok", "slug": "tiktok", "kind": "employer", "domain": "tiktok.com", "description": "ByteDance short-video app."},
+    {"name": "Snap", "slug": "snap", "kind": "employer", "domain": "snap.com", "description": "Snapchat + Spectacles + AR."},
+    {"name": "Discord", "slug": "discord", "kind": "both", "domain": "discord.com", "description": "Real-time voice + text community platform."},
+    {"name": "X (Twitter)", "slug": "x-twitter", "kind": "both", "domain": "x.com", "description": "Microblogging platform."},
+
+    # --- More dev tools / SaaS ---
+    {"name": "Linear", "slug": "linear", "kind": "both", "domain": "linear.app", "description": "Issue tracker / project management."},
+    {"name": "MongoDB", "slug": "mongodb", "kind": "both", "domain": "mongodb.com", "description": "Document database + Atlas managed service."},
+    {"name": "Snowflake", "slug": "snowflake", "kind": "both", "domain": "snowflake.com", "description": "Cloud data warehouse."},
+    {"name": "Databricks", "slug": "databricks", "kind": "both", "domain": "databricks.com", "description": "Lakehouse data + ML platform."},
+    {"name": "Datadog", "slug": "datadog", "kind": "both", "domain": "datadoghq.com", "description": "Observability + monitoring."},
+    {"name": "Twilio", "slug": "twilio", "kind": "both", "domain": "twilio.com", "description": "Programmable messaging + voice."},
+    {"name": "PagerDuty", "slug": "pagerduty", "kind": "both", "domain": "pagerduty.com", "description": "Incident response platform."},
+    {"name": "Zoom", "slug": "zoom", "kind": "both", "domain": "zoom.us", "description": "Video conferencing platform."},
+    {"name": "Hugging Face", "slug": "hugging-face", "kind": "both", "domain": "huggingface.co", "description": "Open-source AI model hub."},
+
+    # --- Insurance ---
+    {"name": "Geico", "slug": "geico", "kind": "both", "domain": "geico.com", "description": "Auto + property insurance."},
+    {"name": "Progressive", "slug": "progressive", "kind": "both", "domain": "progressive.com", "description": "Auto + property insurance."},
+    {"name": "State Farm", "slug": "state-farm", "kind": "both", "domain": "statefarm.com", "description": "Auto + home insurance."},
+
     # --- Scam archetypes (FICTIONAL — clearly-marked demo entities) ---
     {"name": "Acme Phishing Demo Co", "slug": "acme-phishing-demo",
      "kind": "merchant", "domain": "acme-phishing-demo.example",
@@ -504,6 +595,148 @@ EMPLOYMENT_REVIEWS = [
      "Distributed work has equalized US and AU offices. Career growth from the US is no longer second-tier the way it used to be.",
      "Product", "current"),
 
+    # YouTube
+    ("youtube", 3.8, "Creator-side teams differ from corp Google",
+     "Working on YouTube Studio is closer to startup pace than corporate Google. The product directly shapes a million creators' incomes — that weight focuses the work.",
+     "Engineering", "current"),
+    ("youtube", 3.6, "Algorithm work is opaque even internally",
+     "Recommendation team is intentionally compartmentalized. Useful for security; frustrating for cross-team learning.",
+     "Engineering", "former"),
+    ("twitch", 3.7, "Streamer-relations teams have purpose",
+     "Building tools that pay creators directly is rewarding. The Amazon ownership means corporate-class benefits.",
+     "Engineering", "current"),
+    ("twitch", 3.2, "Layoffs in 2024 hit hard",
+     "Surviving teams carry more load. Direction since has been clearer but trust took a hit.",
+     "Product", "former"),
+
+    # Best Buy
+    ("best-buy", 3.6, "Geek Squad work is steady",
+     "Tech-support role has predictable hours and decent benefits for the retail sector. Customer interactions vary wildly day to day.",
+     "Geek Squad", "current"),
+    ("best-buy", 3.4, "Sales floor depends on the store manager",
+     "Two stores, two completely different cultures. Ask current employees about leadership before you accept.",
+     "Sales", "former"),
+
+    # Home Depot
+    ("home-depot", 3.7, "Pro-Desk roles are the best floor positions",
+     "Working contractor-facing means consistent customers and bigger transactions. Pay tiers above standard floor associate.",
+     "Pro Desk", "current"),
+    ("home-depot", 3.3, "Weekend shifts are mandatory",
+     "Schedule includes weekends. Pay is fine for retail; the schedule is the trade-off.",
+     "Sales floor", "former"),
+
+    # Chase
+    ("chase", 3.5, "Tech-side teams operate like a SaaS company",
+     "Working in Chase Digital is closer to fintech-startup pace than to traditional banking. Comp is competitive with mid-tier tech.",
+     "Engineering", "current"),
+    ("chase", 3.0, "Branch staff workload increased",
+     "Customer-facing roles in branches handle more services with smaller teams than 5 years ago. Quotas are real.",
+     "Branch", "former"),
+
+    # Bank of America
+    ("bank-of-america", 3.4, "BofA tech is decent post-modernization",
+     "Engineering work is more interesting than a legacy bank's reputation suggests. Cloud + Java + Spring; ladders are explicit.",
+     "Engineering", "current"),
+
+    # Delta
+    ("delta", 3.8, "Flight crew schedules are predictable",
+     "Senior crew get great schedules. Junior crew bid leftovers. Bid seniority is the actual currency.",
+     "Flight crew", "current"),
+    ("delta", 3.6, "Ground ops is physically demanding",
+     "Long shifts, weather exposure. Pay reflects it for senior employees with union protections.",
+     "Ground ops", "current"),
+
+    # Toyota
+    ("toyota", 4.0, "Manufacturing culture is calm + disciplined",
+     "Kentucky plant. Kaizen + Toyota Production System are real, not just slogans. Predictable schedule and overtime protections.",
+     "Manufacturing", "current"),
+
+    # Verizon
+    ("verizon", 3.3, "Field tech work is steady",
+     "Outside-plant work has good pay + union protections. Office politics are real for those who climb.",
+     "Field tech", "current"),
+
+    # Sony
+    ("sony", 3.7, "PlayStation org has stronger culture than corporate Sony",
+     "SIE feels distinct from the parent company. Gaming-industry pace.",
+     "Engineering", "current"),
+
+    # Samsung
+    ("samsung", 3.5, "Korean HQ vs US offices differ noticeably",
+     "Mountain View has US-style flexibility. Suwon (Korea HQ) follows Korean corporate norms. Mileage varies.",
+     "Engineering", "current"),
+
+    # TikTok
+    ("tiktok", 3.4, "Pace is unrelenting",
+     "If you came from US tech expecting 9-to-5 norms, TikTok will be jarring. Compensation reflects the hours.",
+     "Engineering", "current"),
+    ("tiktok", 3.0, "996-adjacent in some teams",
+     "Officially no. Practically, expectations on certain product teams trend that way.",
+     "Engineering", "former"),
+
+    # Snap
+    ("snap", 3.6, "AR org is the most interesting work",
+     "Spectacles + AR is genuine research-stage work. The core Snapchat product is more incremental.",
+     "AR/VR", "current"),
+
+    # Discord
+    ("discord", 4.0, "Remote-first done well",
+     "Genuine async culture. Hiring bar is high. Distributed across timezones.",
+     "Engineering", "current"),
+
+    # Linear
+    ("linear", 4.6, "Tiny + opinionated team",
+     "Engineering bar is real. Pace is fast. Product opinions are strong and shared. If you like that, it's exhilarating.",
+     "Engineering", "current"),
+
+    # MongoDB
+    ("mongodb", 3.9, "Atlas team is the fast-moving side",
+     "MongoDB Atlas (the cloud-hosted product) operates faster than the legacy database team. Both inside the same company.",
+     "Engineering", "current"),
+
+    # Snowflake
+    ("snowflake", 4.0, "Customer-facing engineering is rewarding",
+     "Solutions architects + customer engineers work directly with enterprise customers. Comp + recognition reflect it.",
+     "Solutions", "current"),
+
+    # Databricks
+    ("databricks", 4.1, "Hypergrowth pace",
+     "Hiring + product velocity both intense. Comp packages reflect the funding rounds.",
+     "Engineering", "current"),
+
+    # Datadog
+    ("datadog", 4.0, "Incident-response culture is healthy",
+     "On-call is real but well-supported. Postmortems are blameless. NYC office has strong in-person culture.",
+     "Engineering", "current"),
+
+    # Twilio
+    ("twilio", 3.4, "Layoffs reshaped the culture",
+     "Pre-2023 Twilio and post-2023 Twilio feel like different companies. Engineering quality remains but the optimism dimmed.",
+     "Engineering", "current"),
+
+    # PagerDuty
+    ("pagerduty", 3.8, "Calm, focused remote-first",
+     "Distributed across NA + EU. Async-first. Healthy boundaries on on-call rotations even for an incident-management company.",
+     "Engineering", "current"),
+
+    # Zoom
+    ("zoom", 3.5, "Post-pandemic adjustment is real",
+     "Hyper-growth slowed sharply. Org has been resizing. Day-to-day work is fine; planning horizons are shorter.",
+     "Engineering", "current"),
+
+    # Hugging Face
+    ("hugging-face", 4.3, "Mission + open-source posture is real",
+     "Engineering culture is research-leaning + community-first. Pay is competitive with non-FAANG tech.",
+     "Engineering", "current"),
+
+    # Geico, State Farm
+    ("geico", 3.4, "Adjuster role is steady but stressful",
+     "Claims processing volume is high. Training is structured. Comp + benefits are corporate-class.",
+     "Claims", "current"),
+    ("state-farm", 3.6, "Agency life is entrepreneurial",
+     "Being a State Farm agent is closer to running a small business than being an employee. The model works for some, not others.",
+     "Agency", "former"),
+
     # More on existing companies — broaden the catalog
     ("anthropic", 4.5, "Hiring bar feels intentional",
      "Interview process is rigorous but the questions are calibrated to the work. Felt respected throughout — no trick puzzles, no time-pressure ego plays.",
@@ -793,6 +1026,249 @@ SHOPPING_REVIEWS = [
     ("atlassian", 4.0, "Trello is still good for simple boards",
      "If your team rejects Jira's complexity, Trello is the right downgrade — free tier covers most teams.",
      "Trello Free", 0.0),
+
+    # Streaming
+    ("disney-plus", 4.1, "Catalog depth is why we keep it",
+     "Marvel + Star Wars + Disney back catalog + National Geographic. Worth the bundle with Hulu.",
+     "Disney+ Premium", 13.99),
+    ("disney-plus", 3.8, "Profile + parental controls are solid",
+     "Kid profiles + age-gating work as advertised. Better than most competitors for family setups.",
+     "Disney+ standard", 9.99),
+    ("hulu", 3.8, "Live TV bundle competitive vs YouTube TV",
+     "Hulu + Live TV pricing has tracked YouTube TV. Local channels are reliable. UI is dated.",
+     "Hulu + Live TV", 76.99),
+    ("hbo-max", 4.0, "Catalog has rebuilt nicely",
+     "Post-Discovery merger turbulence, the catalog is back to feeling premium. Documentary + HBO original content remains the strength.",
+     "Max Ad-Free", 16.99),
+    ("youtube", 4.4, "YouTube Premium is the underrated pick",
+     "Background play + ad-free + YouTube Music is the bundle nobody talks about. The ads on free have gotten unbearable.",
+     "Premium Family", 22.99),
+    ("twitch", 3.8, "Turbo + subscriber model",
+     "Turbo for ad-free + sub-to-creators model is genuinely good for top creators. Mid-tier creators struggle with the take rate.",
+     "Twitch Turbo", 11.99),
+    ("paramount-plus", 3.5, "Live sports is the killer feature",
+     "NFL + Champions League on a streaming app for less than YouTube TV. Catalog beyond CBS is thinner.",
+     "Paramount+ Showtime", 12.99),
+
+    # Big-box retail (shopping)
+    ("best-buy", 4.0, "Open-Box deals are genuinely good",
+     "Excellent-condition open-box laptops at 15-20% off, same warranty. Easy way to save on premium electronics.",
+     "Open-Box laptop", 1100.0),
+    ("best-buy", 3.8, "Geek Squad set up my parents' TV",
+     "$70 in-home setup was worth it for elderly parents. They've used the Geek Squad support membership 3 times this year.",
+     "Geek Squad service", 70.0),
+    ("home-depot", 4.0, "Project pickup workflow is good",
+     "Order online, pick up in 2 hours. Cuts out the wandering-around-Home-Depot tax.",
+     "Lumber pickup", 230.0),
+    ("home-depot", 3.6, "Lumber quality varies by store",
+     "Same SKU, two stores in the same metro, very different quality. Worth inspecting before loading.",
+     "Lumber order", 180.0),
+    ("lowes", 3.9, "Pro Rewards earned us 5% back",
+     "Contractor account paid for itself. 5% on materials + 60-day returns covers most jobs.",
+     "Pro Rewards member", 0.0),
+    ("ikea", 4.1, "Quality at the price is honest",
+     "Nobody buys IKEA expecting heirloom furniture. For a starter apartment or a kids' room, the value is hard to beat.",
+     "Bookshelf + desk", 350.0),
+    ("ikea", 3.4, "Delivery + assembly fees double the price",
+     "$300 flat-pack + $200 delivery + $200 assembly = $700. If you have a truck and patience, save the money.",
+     "Sofa delivery + assembly", 700.0),
+    ("kroger", 3.9, "Loyalty card discounts are real",
+     "Fuel points + member-only sale prices add up. Worth the loyalty signup even if you shop monthly.",
+     "Weekly groceries", 140.0),
+    ("whole-foods", 3.6, "Prime discounts narrowed the price gap",
+     "Whole Foods used to be 30-40% pricier than a regular grocer. With Prime member discounts on key items, it's now ~15%.",
+     "Weekly groceries", 180.0),
+    ("cvs", 3.4, "ExtraCare coupons feel manipulative",
+     "The price of getting a deal on toothpaste is being tracked + offered 17 coupons. Privacy trade-off some won't like.",
+     "Pharmacy + sundries", 40.0),
+    ("walgreens", 3.5, "Pharmacy understaffing is real",
+     "Prescription wait times have grown noticeably. Staff is overworked. Service quality varies by store.",
+     "Prescription fill", 0.0),
+
+    # Restaurants
+    ("starbucks", 3.7, "Rewards program slowly degraded",
+     "Earning rates and redemption thresholds have gotten less generous. Still convenient if you commute past one.",
+     "Daily latte", 6.45),
+    ("starbucks", 3.5, "Mobile order + pickup works",
+     "Order on the app, walk in, grab the cup. Saves the line. Works well at lower-volume locations; chaotic at downtown stores.",
+     "Mobile order regular", 5.85),
+    ("mcdonalds", 3.4, "App deals are the way",
+     "Walk-in prices have crept up. App-only deals are 30%+ cheaper. Required reading before ordering.",
+     "App order", 12.0),
+    ("chipotle", 4.0, "Online + customizable",
+     "Order on the app, choose every detail, ready when you arrive. Portion sizes vary by location.",
+     "Bowl + drink", 14.0),
+    ("dominos", 4.0, "Tracker + delivery time consistency",
+     "Pizza tracker actually reflects status. Delivery within their quoted time 9/10 orders.",
+     "Pizza + sides", 28.0),
+    ("chick-fil-a", 4.5, "Operational excellence is real",
+     "Lines move fast even at peak. App rewards are generous. Service standard is consistent across locations.",
+     "Combo + drink", 11.0),
+    ("sweetgreen", 3.6, "Pricing crept up faster than salads got bigger",
+     "Once-affordable lunch is now $18 with delivery. Quality is good; value debate is real.",
+     "Bowl + delivery", 18.0),
+
+    # Banks (consumer)
+    ("chase", 3.8, "Mobile app is the strongest in mainstream banking",
+     "Functional, fast, supports almost everything you need. Branch network is the second moat.",
+     "Total Checking", 0.0),
+    ("chase", 3.4, "Sapphire rewards still compelling",
+     "1.25x on travel via the portal, transfer partners worth more. Annual fee paid back in points.",
+     "Sapphire Preferred", 95.0),
+    ("bank-of-america", 3.5, "Preferred Rewards tiers work",
+     "Once you cross the $20k tier the perks (credit-card bonuses, no fees) become meaningful.",
+     "Preferred Rewards Platinum", 0.0),
+    ("wells-fargo", 3.0, "Account issues took two visits to resolve",
+     "Reputation issues aside, the day-to-day app + ATM network work. Resolution speed when things break is slow.",
+     "Checking account", 0.0),
+    ("american-express", 4.2, "Gold card dining + groceries cashback",
+     "$250 annual fee. With dining + grocery cap, the 4x earnings + credits make it pencil out for our household.",
+     "Gold Card", 250.0),
+    ("charles-schwab", 4.5, "Investor Checking — ATM fees reimbursed worldwide",
+     "Best traveler-friendly checking account I've used. Zero foreign-transaction fees + ATM reimbursement.",
+     "Investor Checking", 0.0),
+    ("vanguard", 4.4, "ETFs at-cost is the moat",
+     "Expense ratios in the 0.03-0.10% range. UI is dated but the underlying products are the cheapest in their class.",
+     "VTSAX + VTI", 0.0),
+    ("fidelity", 4.3, "Zero-expense-ratio index funds",
+     "Fidelity ZERO funds are genuinely free. Mobile + web app are more modern than Vanguard.",
+     "FZROX + FZILX", 0.0),
+
+    # Airlines
+    ("delta", 3.7, "Reliable execution + Sky Club access (with Amex)",
+     "Operationally the most reliable major US carrier in my experience. Sky Club access via Amex Platinum makes long layovers tolerable.",
+     "Atlanta → SFO", 480.0),
+    ("united", 3.4, "Polaris is great; main cabin is fine",
+     "Polaris business class is competitive with the best. Main cabin is mid-tier. Hub-and-spoke means connections in EWR or ORD.",
+     "International economy", 850.0),
+    ("american-airlines", 3.2, "AAdvantage devalued",
+     "Award redemption rates have steadily worsened. Used to be the best frequent-flyer program; now mid-pack.",
+     "Roundtrip economy", 380.0),
+    ("southwest", 3.9, "Open seating + bags fly free",
+     "Two free checked bags is the headline. Open-seating + Boarding Group A is its own minor sport.",
+     "DAL → LAS", 220.0),
+    ("jetblue", 4.0, "Mint product is sleeper-business class",
+     "JFK → LAX in a Mint Studio for the cost of a competitor's premium economy. Best transcon value.",
+     "Mint seat JFK→LAX", 1100.0),
+    ("alaska-airlines", 4.3, "Mileage Plan still strong",
+     "Of remaining frequent-flyer programs, Alaska gives the most flexibility. Partner award charts haven't been gutted yet.",
+     "Mileage Plan member", 0.0),
+
+    # Hotels
+    ("marriott", 3.7, "Bonvoy elite tier matters more than the brand",
+     "Platinum + Titanium status delivers consistent room upgrades + breakfast. Below Gold, expect generic experience.",
+     "Bonvoy Titanium", 0.0),
+    ("hilton", 3.8, "Diamond status across brand range",
+     "Conrad to Hampton — all the same Hilton points. Diamond breakfast credit + lounge access varies by property.",
+     "Hilton Honors Diamond", 0.0),
+    ("hyatt", 4.2, "Globalist is the most generous elite status",
+     "Smaller program, but Globalist room upgrades + suite nights are more reliable than Marriott or Hilton's top tiers.",
+     "Globalist", 0.0),
+
+    # Auto
+    ("toyota", 4.4, "Reliability reputation is earned",
+     "5-year-old RAV4 still on original brakes + battery. Cost of ownership is the headline.",
+     "RAV4 Hybrid", 32000.0),
+    ("ford", 3.5, "F-150 builds well; software is a journey",
+     "Hardware is excellent. Sync 4 infotainment has bugs that should have been caught pre-ship.",
+     "F-150 Lariat", 58000.0),
+    ("honda", 4.3, "Civic + CR-V values are unmatched",
+     "Resale value alone justifies the new-car premium. Cost-of-ownership over 8 years comes out ahead of cheaper competitors.",
+     "Civic Hybrid", 28000.0),
+    ("bmw", 4.0, "Driving experience is the brand",
+     "i4 e-Drive40 — well-engineered, fun, expensive. Service costs at year 3+ ramp up.",
+     "i4 e-Drive40", 56000.0),
+
+    # Telecom
+    ("verizon", 3.7, "Coverage is the moat",
+     "Rural + suburban coverage still beats T-Mobile in most parts of the US. Bill is higher.",
+     "Unlimited Plus plan", 90.0),
+    ("att", 3.2, "Fiber product is great; wireless is mid",
+     "AT&T Fiber 1GB is among the best wired internet in markets where it's available. Wireless side is less competitive.",
+     "Fiber 1 Gig", 80.0),
+    ("t-mobile", 3.9, "Magenta Max best value among the big three",
+     "Coverage has improved enormously since 2020. Bill is meaningfully lower than Verizon for similar service in my zip.",
+     "Magenta Max", 85.0),
+    ("xfinity", 2.9, "Speeds OK, customer service rough",
+     "Service performance is fine. Any time you need to talk to support, it's a 30-minute ordeal.",
+     "Internet 600 Mbps", 70.0),
+
+    # Hardware
+    ("sony", 4.2, "WH-1000XM5 headphones",
+     "Three years on the XM4s, upgraded to XM5. Best ANC + transparency mode in the over-ear class. Worth the premium.",
+     "WH-1000XM5", 399.0),
+    ("samsung", 4.0, "S24 Ultra is the camera",
+     "100x zoom is the gimmick that turns out to be useful. Display + camera are the differentiators.",
+     "Galaxy S24 Ultra", 1300.0),
+    ("lg", 4.4, "C2 OLED for movies + gaming",
+     "Bought during a Black Friday sale at $1100. Three years in, no burn-in on careful use. Picture quality is the headline.",
+     "C2 OLED 65\"", 1100.0),
+    ("sonos", 4.0, "Beam Gen 2 punches above its size",
+     "Soundbar + 2 surrounds + Sub via TruePlay calibration. Tightest small-room home theater under $1500.",
+     "Beam Gen 2", 499.0),
+    ("dell", 3.6, "XPS 13 had the screen flicker bug",
+     "Sent in for repair under warranty. Got it back in 2 weeks. Service was fine but the issue shouldn't have shipped.",
+     "XPS 13 Plus", 1500.0),
+    ("hp", 3.5, "EliteBook business line is solid",
+     "If you're stuck with HP via corporate IT, the EliteBook line beats the Pavilion consumer line meaningfully.",
+     "EliteBook 840", 0.0),
+
+    # Social / consumer apps
+    ("pinterest", 3.7, "Search results are the underrated feature",
+     "For recipes + home projects, Pinterest beats Google for visual discovery.",
+     "Pinterest free", 0.0),
+    ("tiktok", 3.4, "Algorithm is the moat; data practices give pause",
+     "For-You Page accuracy is uncanny. Whether that's worth the data trade-off is up to you.",
+     "Time spent", 0.0),
+    ("snap", 3.4, "Snap Spectacles AR is the interesting bet",
+     "Consumer Snapchat is fine. The AR + Spectacles roadmap is the company's actual long-term play.",
+     "Snapchat+ subscription", 3.99),
+    ("discord", 4.3, "Best community + voice platform",
+     "Nitro subscription unlocks emoji + larger uploads. For active community management, it pays back.",
+     "Nitro", 9.99),
+    ("x-twitter", 3.0, "Quality has declined for many users",
+     "If you curate your following list aggressively, value remains. Default feed has gotten worse.",
+     "Premium", 8.0),
+
+    # Dev tools
+    ("linear", 4.7, "Best issue tracker UX in years",
+     "Speed + keyboard-shortcut-everything is the killer feature. Triage + roadmap planning genuinely faster than Jira.",
+     "Linear Standard", 8.0),
+    ("mongodb", 4.0, "Atlas free tier is generous",
+     "M0 free tier is enough for hobby projects + early-stage testing. Pricing past M10 climbs sharply.",
+     "Atlas M0 (free)", 0.0),
+    ("snowflake", 4.0, "Pricing surprises are the only gripe",
+     "Pay-for-compute model can ambush you with one heavy query. Set query timeouts religiously.",
+     "Standard credits", 0.0),
+    ("databricks", 4.1, "Notebook + ML workflow integration is strong",
+     "Notebooks + MLflow + Unity Catalog in one place. Easier than stitching together AWS primitives.",
+     "Databricks Standard", 0.0),
+    ("datadog", 3.8, "Powerful but bill creep is real",
+     "Logs + APM + Infrastructure adds up fast. Excellent product; budget hygiene required.",
+     "Datadog APM + Logs", 0.0),
+    ("twilio", 3.7, "Programmable Voice + SMS for 12 years still works",
+     "Pricing is competitive; documentation is the gold standard. SendGrid integration since acquisition has been smoother than feared.",
+     "API usage", 0.0),
+    ("pagerduty", 4.1, "On-call routing is reliable",
+     "Schedule overrides + escalation policies do what you'd expect. UI got a refresh that improved discoverability.",
+     "PagerDuty Business", 21.0),
+    ("zoom", 3.9, "Still the most reliable video product",
+     "Despite Meet + Teams gaining ground, audio + video quality at scale is still where Zoom wins.",
+     "Zoom Pro", 14.99),
+    ("hugging-face", 4.5, "Models + datasets + Spaces in one place",
+     "Free Hub + Inference Endpoints + Spaces makes prototyping AI products painless. Pricing past free tier is reasonable.",
+     "Hub free", 0.0),
+
+    # Insurance
+    ("geico", 3.6, "Auto premium dropped after switching",
+     "Saved $480/year vs my previous carrier for equivalent coverage. Claims process for a fender-bender was straightforward.",
+     "Auto policy", 0.0),
+    ("progressive", 3.7, "Name Your Price tool helps",
+     "Useful for comparing exactly what you trade off for premium drops. Snapshot telematics discount is real.",
+     "Auto + Renters", 0.0),
+    ("state-farm", 3.8, "Local agent relationships matter",
+     "Bundled auto + home + life with one local agent. Premium is a tad higher than online-first carriers but service is more personal.",
+     "Bundle policy", 0.0),
 
     # REI
     ("rei", 4.5, "Co-op return policy is real",
