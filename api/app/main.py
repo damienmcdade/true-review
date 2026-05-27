@@ -229,6 +229,77 @@ def search_companies(
     return out
 
 
+@app.get("/companies/discover")
+@limiter.limit("30/minute")
+async def discover_companies_route(
+    request: Request,
+    q: str = Query(..., min_length=2, max_length=120),
+    session: Session = Depends(get_session),
+):
+    """Search beyond our internal catalog.
+
+    Returns: { internal: [...], external: [...] }
+
+    DECLARED BEFORE /companies/{slug} so the literal path matches first;
+    FastAPI evaluates routes in registration order.
+    """
+    safe = sanitize_text(q, max_len=120)
+    like = f"%{safe}%"
+    internal_rows = session.exec(
+        select(Company)
+        .where(or_(Company.name.ilike(like), Company.domain.ilike(like)))
+        .limit(10)
+    ).all()
+    internal = [
+        {
+            "name": c.name,
+            "slug": c.slug,
+            "kind": c.kind.value if isinstance(c.kind, CompanyKind) else str(c.kind),
+            "domain": c.domain,
+            "is_scam_flagged": c.is_scam_flagged,
+            "scam_reports_count": c.scam_reports_count or 0,
+            "exists": True,
+        }
+        for c in internal_rows
+    ]
+    have_slugs = {c["slug"] for c in internal}
+
+    wiki = await fetch_wikipedia_summary(safe)
+    oc = await fetch_opencorporates(safe)
+
+    external = []
+    if wiki.get("found"):
+        proposed_slug = slugify(wiki.get("title") or safe)
+        if proposed_slug not in have_slugs:
+            external.append({
+                "source": "wikipedia",
+                "name": wiki.get("title"),
+                "proposed_slug": proposed_slug,
+                "description": (wiki.get("extract") or "")[:280],
+                "url": wiki.get("url"),
+                "exists": False,
+            })
+    for m in (oc.get("matches") or [])[:3]:
+        name = m.get("name")
+        if not name:
+            continue
+        proposed_slug = slugify(name)
+        if proposed_slug in have_slugs:
+            continue
+        external.append({
+            "source": "opencorporates",
+            "name": name,
+            "proposed_slug": proposed_slug,
+            "jurisdiction": m.get("jurisdiction"),
+            "registration_number": m.get("number"),
+            "status": m.get("status"),
+            "url": m.get("opencorporates_url"),
+            "exists": False,
+        })
+
+    return {"query": safe, "internal": internal, "external": external}
+
+
 @app.get("/companies/{slug}", response_model=CompanyOut)
 @limiter.limit("180/minute")
 def get_company(request: Request, slug: str, session: Session = Depends(get_session)):
@@ -512,78 +583,6 @@ def submit_review(
 # --------------------------------------------------------------------------- #
 # External enrichment — real public data
 # --------------------------------------------------------------------------- #
-
-@app.get("/companies/discover")
-@limiter.limit("30/minute")
-async def discover_companies(
-    request: Request,
-    q: str = Query(..., min_length=2, max_length=120),
-    session: Session = Depends(get_session),
-):
-    """Search beyond our internal catalog.
-
-    Returns: { internal: [...], external: [...] }
-
-    `internal` are companies already in our DB.
-    `external` are real public-data hits from Wikipedia + OpenCorporates
-    the user can adopt with one click via POST /companies.
-    """
-    safe = sanitize_text(q, max_len=120)
-    like = f"%{safe}%"
-    internal_rows = session.exec(
-        select(Company)
-        .where(or_(Company.name.ilike(like), Company.domain.ilike(like)))
-        .limit(10)
-    ).all()
-    internal = [
-        {
-            "name": c.name,
-            "slug": c.slug,
-            "kind": c.kind.value if isinstance(c.kind, CompanyKind) else str(c.kind),
-            "domain": c.domain,
-            "is_scam_flagged": c.is_scam_flagged,
-            "scam_reports_count": c.scam_reports_count or 0,
-            "exists": True,
-        }
-        for c in internal_rows
-    ]
-    have_slugs = {c["slug"] for c in internal}
-
-    wiki = await fetch_wikipedia_summary(safe)
-    oc = await fetch_opencorporates(safe)
-
-    external = []
-    if wiki.get("found"):
-        proposed_slug = slugify(wiki.get("title") or safe)
-        if proposed_slug not in have_slugs:
-            external.append({
-                "source": "wikipedia",
-                "name": wiki.get("title"),
-                "proposed_slug": proposed_slug,
-                "description": wiki.get("extract", "")[:280],
-                "url": wiki.get("url"),
-                "exists": False,
-            })
-    for m in (oc.get("matches") or [])[:3]:
-        name = m.get("name")
-        if not name:
-            continue
-        proposed_slug = slugify(name)
-        if proposed_slug in have_slugs:
-            continue
-        external.append({
-            "source": "opencorporates",
-            "name": name,
-            "proposed_slug": proposed_slug,
-            "jurisdiction": m.get("jurisdiction"),
-            "registration_number": m.get("number"),
-            "status": m.get("status"),
-            "url": m.get("opencorporates_url"),
-            "exists": False,
-        })
-
-    return {"query": safe, "internal": internal, "external": external}
-
 
 @app.post("/companies", response_model=CompanyOut, status_code=201)
 @limiter.limit("10/minute;50/day")
