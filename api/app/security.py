@@ -59,29 +59,48 @@ def detect_problems(s: str) -> list[str]:
     return problems
 
 
+_INJECTION_PATTERNS = [
+    # Direct override attempts
+    r"ignore (all |any )?(previous|prior|above|earlier) (instructions?|prompts?|rules?)",
+    r"disregard (all |any |the )?(previous|prior|above|earlier)",
+    r"forget (everything|all) (above|before|prior)",
+    r"override (your|the|all) (instructions?|rules?|system)",
+    # Persona switches
+    r"you (are|will be) (now |a |an )?(?:pirate|cat|dog|child|hacker|admin|developer|jailbroken)",
+    r"act (as|like) (a |an )?(?:pirate|cat|dog|hacker|admin|developer)",
+    r"pretend (to be|you are|you're)",
+    r"roleplay (as|the)",
+    r"speak (like|as) (a |an )",
+    # Direct instructions
+    r"new instructions?:",
+    r"system prompt[: ]",
+    r"(your|the) (new|real|actual|true) (instructions?|task|goal|prompt)",
+    # Output-format hijacks
+    r"output (only|just) ['\"]",
+    r"respond (only |just )?with ['\"]",
+]
+_INJECTION_RE = re.compile("|".join(f"(?:{p})" for p in _INJECTION_PATTERNS), re.IGNORECASE)
+
+
 def harden_prompt_input(s: str, *, max_len: int = 4000) -> str:
-    """Mitigate prompt injection from review bodies fed to the LLM.
+    """Mitigate prompt injection from user-controlled text fed to the LLM.
 
     - Truncate.
     - Strip lines that look like 'system:' / 'assistant:' role markers.
-    - Strip suspicious instruction-injection phrases.
+    - Replace known injection patterns with a noise token so the LLM still
+      sees the surrounding context but the imperative is broken.
+    - Wrap content in clear delimiters in the calling caller (not here).
     """
     if not s:
         return ""
     s = s[:max_len]
-    # Remove lines that try to impersonate a role
+    # Strip lines that try to impersonate a role
     s = re.sub(
-        r"(?im)^\s*(system|assistant|user|developer)\s*:\s*",
+        r"(?im)^\s*(system|assistant|user|developer|tool)\s*:\s*",
         "",
         s,
     )
-    # Strip common injection openers
-    s = re.sub(
-        r"(?i)(ignore (all )?previous (instructions|prompts)"
-        r"|disregard (all )?previous|you are now|new instructions:)",
-        "[redacted-injection]",
-        s,
-    )
+    s = _INJECTION_RE.sub("[redacted-injection]", s)
     return s
 
 
