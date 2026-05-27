@@ -51,6 +51,11 @@ class ReviewOut(BaseModel):
     money_lost: Optional[float] = None
     created_at: str
     author_handle: Optional[str] = None
+    # Provenance: how we know the reviewer is who they claim to be.
+    author_verification_tier: Optional[str] = None  # e.g. "t1_email"
+    verification_source: Optional[str] = None       # short human label
+    verification_explainer: Optional[str] = None    # 1-2 sentence detail
+    is_demo: bool = False
 
 
 class ReviewIn(BaseModel):

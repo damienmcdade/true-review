@@ -1,7 +1,8 @@
 import Link from 'next/link';
-import { AlertTriangle, Briefcase, ShoppingBag, Building2 } from 'lucide-react';
+import { AlertTriangle, Briefcase, ShoppingBag, Building2, Sparkles } from 'lucide-react';
+import DiscoverExternal from '@/components/DiscoverExternal';
 
-type Result = {
+type InternalHit = {
   id: string;
   name: string;
   slug: string;
@@ -13,7 +14,7 @@ type Result = {
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-async function searchCompanies(query: string, kind?: string): Promise<Result[]> {
+async function searchInternal(query: string, kind?: string): Promise<InternalHit[]> {
   const params = new URLSearchParams();
   if (query) params.set('q', query);
   if (kind && kind !== 'all') params.set('kind', kind);
@@ -21,7 +22,7 @@ async function searchCompanies(query: string, kind?: string): Promise<Result[]> 
   try {
     const res = await fetch(`${API}/companies?${params}`, { next: { revalidate: 20 } });
     if (!res.ok) return [];
-    return (await res.json()) as Result[];
+    return (await res.json()) as InternalHit[];
   } catch {
     return [];
   }
@@ -39,7 +40,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; kind?: string }>;
 }) {
   const { q, kind } = await searchParams;
-  const results = await searchCompanies(q ?? '', kind);
+  const internal = await searchInternal(q ?? '', kind);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
@@ -54,7 +55,7 @@ export default async function SearchPage({
             type="search"
             name="q"
             defaultValue={q ?? ''}
-            placeholder="Search by company name or domain"
+            placeholder="Search by company name or domain — we'll look up anything"
             className="w-full rounded-full border border-white/60 bg-white/80 px-5 py-3 text-ink outline-none placeholder:text-ink/40 focus:border-ocean"
             autoFocus
           />
@@ -68,16 +69,8 @@ export default async function SearchPage({
       </div>
 
       <div className="mt-6 space-y-2">
-        {results.length === 0 ? (
-          <p className="text-sm text-ink/55">
-            No matches. Try a different query, or{' '}
-            <Link href="/review/new" className="underline">
-              submit the first review
-            </Link>
-            .
-          </p>
-        ) : (
-          results.map((c) => (
+        {internal.length > 0 ? (
+          internal.map((c) => (
             <Link
               key={c.id}
               href={`/c/${c.slug}` as never}
@@ -102,8 +95,22 @@ export default async function SearchPage({
               )}
             </Link>
           ))
-        )}
+        ) : null}
       </div>
+
+      {q ? (
+        <section className="mt-8">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink/70">
+            <Sparkles className="h-3.5 w-3.5 text-coral" />
+            Not in our database yet?
+          </h2>
+          <p className="mt-1 text-xs text-ink/55">
+            We&apos;ll look up the company in Wikipedia and the global corporate registry. If
+            it&apos;s real, you can claim a page and post the first verified review.
+          </p>
+          <DiscoverExternal query={q} className="mt-3" />
+        </section>
+      ) : null}
     </main>
   );
 }
@@ -129,9 +136,7 @@ function KindFilter({
       href={href as never}
       className={
         'rounded-full px-3 py-1.5 ' +
-        (selected
-          ? 'bg-oceanDeep text-white'
-          : 'bg-white/60 text-ink/75 hover:bg-white')
+        (selected ? 'bg-oceanDeep text-white' : 'bg-white/60 text-ink/75 hover:bg-white')
       }
     >
       {children}

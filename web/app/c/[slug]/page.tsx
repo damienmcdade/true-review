@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { AlertTriangle, Briefcase, ShoppingBag, Sparkles, Star, BookOpen, FileText, Building } from 'lucide-react';
 import AdSlot from '@/components/AdSlot';
+import ReviewVerifiedBadge from '@/components/ReviewVerifiedBadge';
 
 type Company = {
   id: string;
@@ -32,6 +33,10 @@ type ReviewItem = {
   money_lost?: number;
   created_at: string;
   author_handle?: string;
+  author_verification_tier?: string | null;
+  verification_source?: string | null;
+  verification_explainer?: string | null;
+  is_demo?: boolean;
 };
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -346,9 +351,15 @@ function ReviewCard({ r }: { r: ReviewItem }) {
       </div>
       <h3 className="mt-2 font-semibold text-ink">{r.title}</h3>
       <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink/80">{r.body}</p>
-      <div className="mt-3 flex items-center justify-between text-[11px] text-ink/45">
-        <span>{r.author_handle ?? 'anonymous'}</span>
-        <span>{new Date(r.created_at).toLocaleDateString()}</span>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink/45">
+        <ReviewVerifiedBadge
+          source={r.verification_source}
+          explainer={r.verification_explainer}
+          isDemo={Boolean(r.is_demo)}
+        />
+        <span>
+          {r.author_handle ?? 'anonymous'} · {new Date(r.created_at).toLocaleDateString()}
+        </span>
       </div>
     </article>
   );

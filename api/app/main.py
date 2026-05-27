@@ -75,8 +75,9 @@ async def lifespan(_: FastAPI):
     init_db()
     from sqlmodel import Session as _Session
     with _Session(engine) as session:
-        if not session.exec(select(Company)).first():
-            run_seed(session)
+        # Always run seed — it's idempotent and tops up demo data when we
+        # expand the SAMPLE_COMPANIES / *_REVIEWS lists.
+        run_seed(session)
     yield
 
 
@@ -301,6 +302,7 @@ def list_company_reviews(
             if r.author_id
             else None
         )
+        tier = author.verification_tier if author else None
         out.append(
             ReviewOut(
                 id=str(r.id),
@@ -316,9 +318,71 @@ def list_company_reviews(
                 money_lost=r.money_lost,
                 created_at=r.created_at.isoformat(),
                 author_handle=author.handle if author else None,
+                author_verification_tier=(tier.value if hasattr(tier, "value") else (str(tier) if tier else None)),
+                verification_source=_verification_source_label(tier, r.is_demo),
+                verification_explainer=_verification_explainer(tier, r.is_demo),
+                is_demo=r.is_demo,
             )
         )
     return out
+
+
+def _verification_source_label(tier, is_demo: bool) -> str:
+    if is_demo:
+        return "Demo content"
+    if tier is None or (hasattr(tier, "value") and tier.value == "none"):
+        return "Unverified"
+    label_map = {
+        "t1_email": "Work email verified",
+        "t2_linkedin": "LinkedIn verified",
+        "t3_document": "Document verified",
+        "t4_payroll": "Payroll verified",
+        "t_receipt": "Receipt verified",
+        "t_fraud_evidence": "Evidence on file",
+    }
+    tv = tier.value if hasattr(tier, "value") else str(tier)
+    return label_map.get(tv, "Verified")
+
+
+def _verification_explainer(tier, is_demo: bool) -> str:
+    if is_demo:
+        return (
+            "This is illustrative seed content used to demonstrate the platform. "
+            "Once verified users start posting, demo content gets retired."
+        )
+    if tier is None or (hasattr(tier, "value") and tier.value == "none"):
+        return (
+            "This reviewer hasn't completed identity verification. Treat the "
+            "claim with the same skepticism you'd apply to any anonymous post."
+        )
+    explain_map = {
+        "t1_email": (
+            "The reviewer proved they own a mailbox at the company's domain via a "
+            "one-time email code. Their address is stored only as a salted hash."
+        ),
+        "t2_linkedin": (
+            "We confirmed the reviewer's LinkedIn employment matched the company "
+            "at the time of posting, without sharing their profile publicly."
+        ),
+        "t3_document": (
+            "A human verifier reviewed a redacted document (W-2, offer letter, or "
+            "pay stub) proving the employment relationship."
+        ),
+        "t4_payroll": (
+            "The reviewer connected a payroll provider (Argyle/Pinwheel) that "
+            "cryptographically attested employment. Employer is never notified."
+        ),
+        "t_receipt": (
+            "The reviewer uploaded a redacted receipt or order confirmation as "
+            "proof of purchase."
+        ),
+        "t_fraud_evidence": (
+            "The reviewer attached evidence of the fraud (charge dispute, "
+            "transaction ID, ticket reference). Reviewed by our moderation team."
+        ),
+    }
+    tv = tier.value if hasattr(tier, "value") else str(tier)
+    return explain_map.get(tv, "Verification source not specified.")
 
 
 # --------------------------------------------------------------------------- #
@@ -448,6 +512,97 @@ def submit_review(
 # --------------------------------------------------------------------------- #
 # External enrichment — real public data
 # --------------------------------------------------------------------------- #
+
+@app.get("/companies/discover")
+@limiter.limit("30/minute")
+async def discover_companies(
+    request: Request,
+    q: str = Query(..., min_length=2, max_length=120),
+    session: Session = Depends(get_session),
+):
+    """Search beyond our internal catalog.
+
+    Returns: { internal: [...], external: [...] }
+
+    `internal` are companies already in our DB.
+    `external` are real public-data hits from Wikipedia + OpenCorporates
+    the user can adopt with one click via POST /companies.
+    """
+    safe = sanitize_text(q, max_len=120)
+    like = f"%{safe}%"
+    internal_rows = session.exec(
+        select(Company)
+        .where(or_(Company.name.ilike(like), Company.domain.ilike(like)))
+        .limit(10)
+    ).all()
+    internal = [
+        {
+            "name": c.name,
+            "slug": c.slug,
+            "kind": c.kind.value if isinstance(c.kind, CompanyKind) else str(c.kind),
+            "domain": c.domain,
+            "is_scam_flagged": c.is_scam_flagged,
+            "scam_reports_count": c.scam_reports_count or 0,
+            "exists": True,
+        }
+        for c in internal_rows
+    ]
+    have_slugs = {c["slug"] for c in internal}
+
+    wiki = await fetch_wikipedia_summary(safe)
+    oc = await fetch_opencorporates(safe)
+
+    external = []
+    if wiki.get("found"):
+        proposed_slug = slugify(wiki.get("title") or safe)
+        if proposed_slug not in have_slugs:
+            external.append({
+                "source": "wikipedia",
+                "name": wiki.get("title"),
+                "proposed_slug": proposed_slug,
+                "description": wiki.get("extract", "")[:280],
+                "url": wiki.get("url"),
+                "exists": False,
+            })
+    for m in (oc.get("matches") or [])[:3]:
+        name = m.get("name")
+        if not name:
+            continue
+        proposed_slug = slugify(name)
+        if proposed_slug in have_slugs:
+            continue
+        external.append({
+            "source": "opencorporates",
+            "name": name,
+            "proposed_slug": proposed_slug,
+            "jurisdiction": m.get("jurisdiction"),
+            "registration_number": m.get("number"),
+            "status": m.get("status"),
+            "url": m.get("opencorporates_url"),
+            "exists": False,
+        })
+
+    return {"query": safe, "internal": internal, "external": external}
+
+
+@app.post("/companies", response_model=CompanyOut, status_code=201)
+@limiter.limit("10/minute;50/day")
+def create_company(request: Request, body: CompanyIn, session: Session = Depends(get_session)):
+    slug = body.slug or slugify(body.name)
+    if session.exec(select(Company).where(Company.slug == slug)).first():
+        raise HTTPException(409, f"Company with slug '{slug}' already exists")
+    company = Company(
+        slug=slug,
+        name=sanitize_text(body.name, max_len=200),
+        kind=CompanyKind(body.kind),
+        domain=sanitize_text(body.domain or "", max_len=200) or None,
+        description=sanitize_text(body.description or "", max_len=2000) or None,
+    )
+    session.add(company)
+    session.commit()
+    session.refresh(company)
+    return get_company(request, slug, session)
+
 
 @app.get("/enrichment/wikipedia")
 @limiter.limit("60/minute")
