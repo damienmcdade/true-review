@@ -48,7 +48,7 @@ from .schemas import (
     ModerationLogOut,
 )
 from .seed import run_seed
-from .bulk_import import bulk_import_edgar
+from .bulk_import import bulk_import_edgar, bulk_import_wikidata
 from .ai import ReviewSnippet, ask_llm
 from .security import (
     sanitize_text,
@@ -80,9 +80,10 @@ async def lifespan(_: FastAPI):
         # content when we expand the SAMPLE_COMPANIES / *_REVIEWS lists.
         run_seed(session)
 
-        # Bulk-import SEC EDGAR tickers if our catalog is still small.
-        # Threshold gates this so we don't refetch 10k entries on every cold
-        # start once it has succeeded. Idempotent: dupe slugs get skipped.
+        # Stage 1: SEC EDGAR — every US publicly-traded operating company.
+        # Stage 2: Wikidata — every globally publicly-listed company with
+        #          an English label (covers LSE, TSX, TSE, DAX, ASX, NSE,
+        #          Euronext, JSE, …). Both stages idempotent + non-fatal.
         count = len(session.exec(select(Company)).all())
         if count < 1500:
             try:
@@ -91,6 +92,15 @@ async def lifespan(_: FastAPI):
                           result.get("added"), result.get("skipped"))
             except Exception as e:  # noqa: BLE001 — never let import abort startup
                 _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
+            count = len(session.exec(select(Company)).all())
+
+        if count < 12_000:
+            try:
+                result = bulk_import_wikidata(session)
+                _log.info("Wikidata bulk import: added=%s skipped=%s",
+                          result.get("added"), result.get("skipped"))
+            except Exception as e:  # noqa: BLE001
+                _log.warning("Wikidata bulk import failed (non-fatal): %s", e)
     yield
 
 

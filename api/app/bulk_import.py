@@ -32,6 +32,23 @@ USER_AGENT = (
 
 EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 
+WIKIDATA_SPARQL_URL = "https://query.wikidata.org/sparql"
+
+# All publicly-listed companies (have a stock exchange listing) with an
+# English label. Returns ~10-15k entries globally (NYSE, NASDAQ, LSE, TSX,
+# TSE, DAX, FTSE, ASX, Euronext, BSE, JSE, …). License: CC0 / public domain.
+WIKIDATA_QUERY = """
+SELECT DISTINCT ?company ?companyLabel ?websiteUrl ?countryLabel WHERE {
+  ?company wdt:P414 ?exchange .
+  ?company rdfs:label ?en .
+  FILTER(LANG(?en) = "en")
+  OPTIONAL { ?company wdt:P856 ?websiteUrl. }
+  OPTIONAL { ?company wdt:P17 ?country. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 15000
+"""
+
 
 def _slugify(text: str) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "-", text.strip().lower()).strip("-")
@@ -73,6 +90,106 @@ def _fetch_edgar_tickers() -> list[dict]:
     raw = r.json()
     # raw shape: {"0":{"cik_str":320193,"ticker":"AAPL","title":"Apple Inc."}, ...}
     return list(raw.values())
+
+
+def _extract_domain(url: str | None) -> str | None:
+    if not url:
+        return None
+    m = re.match(r"^https?://([^/]+)", url.strip())
+    if not m:
+        return None
+    domain = m.group(1).lower()
+    if domain.startswith("www."):
+        domain = domain[4:]
+    if not re.fullmatch(r"[a-z0-9.-]{3,253}", domain):
+        return None
+    return domain
+
+
+def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
+                        batch_size: int = 200) -> dict:
+    """Import publicly-listed companies from Wikidata's SPARQL endpoint.
+
+    Each Wikidata entity is filtered to those with a stock-exchange listing
+    AND an English-language label, which keeps the import to notable named
+    entities. The query is public-domain CC0 data.
+
+    Each imported Company:
+      - slug:        slugified label
+      - name:        Wikidata label
+      - kind:        BOTH
+      - domain:      extracted from Wikidata's official-website property
+      - description: "Publicly-listed company on {country}'s exchange."
+    """
+    log.info("Querying Wikidata SPARQL for publicly-listed companies")
+    try:
+        with httpx.Client(timeout=90) as client:
+            r = client.get(
+                WIKIDATA_SPARQL_URL,
+                params={"query": WIKIDATA_QUERY, "format": "json"},
+                headers={
+                    "User-Agent": USER_AGENT,
+                    "Accept": "application/sparql-results+json",
+                },
+            )
+        r.raise_for_status()
+        bindings = r.json().get("results", {}).get("bindings", [])
+    except Exception as e:
+        log.warning("Wikidata fetch failed: %s", e)
+        return {"added": 0, "skipped": 0, "error": str(e)[:200]}
+
+    existing_slugs = set(session.exec(select(Company.slug)).all())
+
+    candidate_rows: list[dict] = []
+    seen_slugs_this_run: set[str] = set()
+    skipped = 0
+
+    for b in bindings:
+        if max_companies is not None and len(candidate_rows) >= max_companies:
+            break
+        label = (b.get("companyLabel", {}).get("value") or "").strip()
+        # Skip when SPARQL falls back to "Q12345" (no English label found)
+        if not label or label.startswith("Q") and label[1:].isdigit():
+            skipped += 1
+            continue
+        if _is_index_or_etf(label):
+            skipped += 1
+            continue
+        slug = _slugify(label)
+        if not slug or slug in existing_slugs or slug in seen_slugs_this_run:
+            skipped += 1
+            continue
+        seen_slugs_this_run.add(slug)
+
+        website = b.get("websiteUrl", {}).get("value")
+        domain = _extract_domain(website)
+        country = (b.get("countryLabel", {}).get("value") or "").strip()
+
+        candidate_rows.append({
+            "slug": slug,
+            "name": label,
+            "domain": domain,
+            "country": country,
+        })
+
+    for i in range(0, len(candidate_rows), batch_size):
+        chunk = candidate_rows[i:i + batch_size]
+        for entry in chunk:
+            desc = "Publicly-listed company."
+            if entry["country"]:
+                desc = f"Publicly-listed company in {entry['country']}."
+            company = Company(
+                slug=entry["slug"],
+                name=entry["name"],
+                kind=CompanyKind.BOTH,
+                domain=entry["domain"],
+                description=desc,
+            )
+            session.add(company)
+        session.commit()
+        log.info("Wikidata bulk-import progress: %d added", i + len(chunk))
+
+    return {"added": len(candidate_rows), "skipped": skipped}
 
 
 def bulk_import_edgar(session: Session, *, max_companies: int | None = None,
