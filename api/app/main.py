@@ -2,9 +2,6 @@ import logging
 import os
 import re
 from contextlib import asynccontextmanager
-
-log = logging.getLogger("true_review.main")
-
 from datetime import datetime
 from collections import Counter
 from typing import Optional

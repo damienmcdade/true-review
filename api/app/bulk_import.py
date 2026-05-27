@@ -91,9 +91,10 @@ def bulk_import_edgar(session: Session, *, max_companies: int | None = None,
         log.warning("EDGAR ticker fetch failed: %s", e)
         return {"added": 0, "skipped": 0, "error": str(e)[:200]}
 
-    existing_slugs = {
-        s for (s,) in session.exec(select(Company.slug)).all()
-    }
+    # session.exec(select(scalar_column)) yields plain values in SQLModel,
+    # NOT tuples — so we iterate directly. The previous (s,) destructuring
+    # threw "too many values to unpack" and aborted the import silently.
+    existing_slugs = set(session.exec(select(Company.slug)).all())
 
     added = 0
     skipped = 0
