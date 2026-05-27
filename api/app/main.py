@@ -48,7 +48,7 @@ from .schemas import (
     ModerationLogOut,
 )
 from .seed import run_seed
-from .bulk_import import bulk_import_edgar, bulk_import_wikidata
+from .bulk_import import bulk_import_edgar, bulk_import_wikidata, bulk_import_mediawiki
 from .ai import ReviewSnippet, ask_llm
 from .security import (
     sanitize_text,
@@ -94,9 +94,9 @@ async def lifespan(_: FastAPI):
                 _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
             count = len(session.exec(select(Company)).all())
 
-        # Wikidata threshold bumped: now we expect both listed (~10k) and
-        # private notable (~15k) results, totaling ~25k entries when
-        # combined with EDGAR. Re-run while under the higher threshold.
+        # Stage 2: Wikidata SPARQL — globally publicly-listed + privately-
+        # held notable. Re-runs while under threshold so we get a top-up
+        # whenever WDQS recovers from an outage.
         if count < 30_000:
             try:
                 result = bulk_import_wikidata(session)
@@ -108,6 +108,23 @@ async def lifespan(_: FastAPI):
                 )
             except Exception as e:  # noqa: BLE001
                 _log.warning("Wikidata bulk import failed (non-fatal): %s", e)
+            count = len(session.exec(select(Company)).all())
+
+        # Stage 3: MediaWiki category enumeration — fallback / supplement.
+        # Uses the Action API (different endpoint than WDQS) so it works
+        # even when SPARQL is rate-limited. Covers stock-exchange categories,
+        # privately-held majors, and topical groupings (banks, pharma, etc.).
+        if count < 30_000:
+            try:
+                result = bulk_import_mediawiki(session)
+                _log.info(
+                    "MediaWiki bulk import: added=%s skipped=%s "
+                    "categories=%s raw_titles=%s",
+                    result.get("added"), result.get("skipped"),
+                    result.get("categories_queried"), result.get("raw_titles"),
+                )
+            except Exception as e:  # noqa: BLE001
+                _log.warning("MediaWiki bulk import failed (non-fatal): %s", e)
     yield
 
 

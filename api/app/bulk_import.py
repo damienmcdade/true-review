@@ -247,6 +247,155 @@ def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
     }
 
 
+MEDIAWIKI_API = "https://en.wikipedia.org/w/api.php"
+
+# Wikipedia categories of notable companies. MediaWiki's list=categorymembers
+# is a different endpoint than WDQS SPARQL and is not affected by WDQS
+# outages. Each category typically returns 200-500 well-curated entries.
+# Public-domain (CC-BY-SA category structure; titles are factual data).
+MEDIAWIKI_CATEGORIES = [
+    "Multinational companies",
+    "Multinational food companies",
+    "Multinational technology companies",
+    "Privately held companies based in the United States",
+    "Privately held companies based in Germany",
+    "Privately held companies based in the United Kingdom",
+    "Privately held companies based in Japan",
+    "S&P 500 companies",
+    "Companies listed on the New York Stock Exchange (A)",
+    "Companies listed on the Nasdaq",
+    "Companies listed on the London Stock Exchange",
+    "Companies listed on the Toronto Stock Exchange",
+    "Companies listed on the Tokyo Stock Exchange",
+    "Companies listed on the Hong Kong Stock Exchange",
+    "Companies listed on the Australian Securities Exchange",
+    "Companies listed on Euronext Paris",
+    "Companies listed on Euronext Amsterdam",
+    "Banks of the United States",
+    "Investment banks",
+    "Internet companies of the United States",
+    "Restaurant chains of the United States",
+    "Retail companies of the United States",
+    "Automotive companies of Germany",
+    "Automotive companies of Japan",
+    "Pharmaceutical companies of the United States",
+    "Aerospace companies of the United States",
+    "Defense companies of the United States",
+    "Insurance companies of the United States",
+    "Software companies of the United States",
+    "Video game companies",
+    "Hotel chains",
+    "Airlines of the United States",
+    "Telecommunications companies of the United States",
+    "Mass media companies of the United States",
+    "Cosmetics companies",
+]
+
+
+def _fetch_category_members(category: str, max_pages: int = 4) -> list[str]:
+    """Fetch up to ~2000 article titles from a Wikipedia category."""
+    titles: list[str] = []
+    cmcontinue: str | None = None
+    pages = 0
+    while pages < max_pages:
+        params = {
+            "action": "query",
+            "list": "categorymembers",
+            "cmtitle": f"Category:{category}",
+            "cmlimit": "500",
+            "cmnamespace": "0",  # main article namespace only
+            "format": "json",
+        }
+        if cmcontinue:
+            params["cmcontinue"] = cmcontinue
+        try:
+            with httpx.Client(timeout=20) as client:
+                r = client.get(
+                    MEDIAWIKI_API, params=params,
+                    headers={"User-Agent": USER_AGENT},
+                )
+            if r.status_code >= 400:
+                log.warning("MediaWiki %s -> HTTP %s", category, r.status_code)
+                break
+            data = r.json()
+            members = data.get("query", {}).get("categorymembers", []) or []
+            titles.extend(m["title"] for m in members)
+            cont = data.get("continue", {})
+            cmcontinue = cont.get("cmcontinue")
+            pages += 1
+            if not cmcontinue:
+                break
+        except Exception as e:
+            log.warning("MediaWiki category fetch failed (%s): %s", category, e)
+            break
+    return titles
+
+
+def bulk_import_mediawiki(session: Session, *, max_companies: int | None = None,
+                         batch_size: int = 200) -> dict:
+    """Acquire companies by enumerating well-curated Wikipedia categories.
+
+    Useful when Wikidata SPARQL is rate-limited or in outage. The MediaWiki
+    Action API uses a separate endpoint and is generally available even
+    when WDQS is degraded.
+
+    Categories cover global stock exchanges, major privately-held companies
+    by country, and topical groupings (banks, automakers, pharma, etc.).
+    """
+    log.info("Importing companies from Wikipedia category listings")
+    all_titles: set[str] = set()
+    for cat in MEDIAWIKI_CATEGORIES:
+        for title in _fetch_category_members(cat):
+            all_titles.add(title)
+        if max_companies and len(all_titles) >= max_companies:
+            break
+
+    existing_slugs = set(session.exec(select(Company.slug)).all())
+    candidate_rows: list[dict] = []
+    seen_slugs_this_run: set[str] = set()
+    skipped = 0
+
+    for title in all_titles:
+        if max_companies is not None and len(candidate_rows) >= max_companies:
+            break
+        clean = title.strip()
+        # Skip disambiguation pages, list pages, and meta-pages
+        if not clean or _is_index_or_etf(clean):
+            skipped += 1
+            continue
+        if "(disambiguation)" in clean.lower() or clean.startswith("List of "):
+            skipped += 1
+            continue
+        slug = _slugify(clean)
+        if not slug or slug in existing_slugs or slug in seen_slugs_this_run:
+            skipped += 1
+            continue
+        seen_slugs_this_run.add(slug)
+        candidate_rows.append({"slug": slug, "name": clean})
+
+    for i in range(0, len(candidate_rows), batch_size):
+        chunk = candidate_rows[i:i + batch_size]
+        for entry in chunk:
+            company = Company(
+                slug=entry["slug"],
+                name=entry["name"],
+                kind=CompanyKind.BOTH,
+                domain=None,
+                description="Notable company from public Wikipedia.",
+            )
+            session.add(company)
+        session.commit()
+        log.info("MediaWiki bulk-import progress: %d added (running total)",
+                 i + len(chunk))
+
+    return {
+        "added": len(candidate_rows),
+        "skipped": skipped,
+        "categories_queried": len(MEDIAWIKI_CATEGORIES),
+        "raw_titles": len(all_titles),
+    }
+
+
 def bulk_import_edgar(session: Session, *, max_companies: int | None = None,
                      batch_size: int = 200) -> dict:
     """Import EDGAR's full company list. Returns {added, skipped}.
