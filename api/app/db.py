@@ -47,6 +47,29 @@ _REQUIRED_REVIEW_COLUMNS = {
 }
 
 
+_REQUIRED_VERIFICATIONTIER_VALUES = {
+    "none",
+    "t1_email",
+    "t2_linkedin",
+    "t3_document",
+    "t4_payroll",
+    "t_receipt",         # added v0.4 for shopping reviews
+    "t_fraud_evidence",  # added v0.4 for scam reports
+}
+
+
+def _enum_values(conn, type_name: str) -> set[str]:
+    rows = conn.execute(
+        text(
+            "SELECT e.enumlabel FROM pg_type t "
+            "JOIN pg_enum e ON e.enumtypid = t.oid "
+            "WHERE t.typname = :name"
+        ),
+        {"name": type_name},
+    ).fetchall()
+    return {r[0] for r in rows}
+
+
 def _schema_is_out_of_sync(insp) -> bool:
     """True if existing tables exist but are missing v0.3+ columns/tables."""
     tables = set(insp.get_table_names())
@@ -58,8 +81,6 @@ def _schema_is_out_of_sync(insp) -> bool:
         existing = {c["name"] for c in insp.get_columns("reviews")}
         if not _REQUIRED_REVIEW_COLUMNS.issubset(existing):
             return True
-    # v0.4: email_verifications table introduced. If users/companies exist
-    # without it, recreate so the new feature works.
     if tables and "users" in tables and "email_verifications" not in tables:
         return True
     return False
@@ -71,15 +92,38 @@ def init_db() -> None:
     This is safe right now because the database contains only seeded demo
     content — no real user reviews. Once we have real users, swap this for
     an Alembic migration.
+
+    Additionally: non-destructively ADD any missing values to the
+    verificationtier Postgres enum. New tier values added in Python (e.g.
+    t_receipt, t_fraud_evidence) need to be reflected on the live enum.
+    Postgres requires ALTER TYPE ... ADD VALUE to be run *outside* a
+    transaction, so each ADD VALUE is committed individually.
     """
     insp = inspect(engine)
     if _schema_is_out_of_sync(insp):
-        log.warning("Pre-v0.3 schema detected on existing tables. Dropping and recreating.")
+        log.warning("Out-of-sync schema detected. Dropping tables + enum types and recreating.")
         with engine.begin() as conn:
             for tbl in ("security_events", "moderation_log", "employment_proofs",
                         "email_verifications", "reviews", "users", "companies"):
                 conn.execute(text(f'DROP TABLE IF EXISTS "{tbl}" CASCADE'))
+            for typ in ("verificationtier", "companykind", "reviewtype", "moderationaction"):
+                conn.execute(text(f'DROP TYPE IF EXISTS "{typ}" CASCADE'))
+
     SQLModel.metadata.create_all(engine)
+
+    # Idempotent enum top-up for upgrades that didn't trigger a full recreate.
+    try:
+        with engine.connect() as conn:
+            existing = _enum_values(conn, "verificationtier")
+        for val in _REQUIRED_VERIFICATIONTIER_VALUES - existing:
+            with engine.connect() as conn:
+                conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text(f"ALTER TYPE verificationtier ADD VALUE IF NOT EXISTS '{val}'")
+                )
+                log.info("Added enum value verificationtier.%s", val)
+    except Exception as e:  # noqa: BLE001
+        # If the enum doesn't exist yet (SQLite local dev, or fresh DB), skip.
+        log.info("Skipping enum top-up: %s", e)
 
 
 def get_session():
