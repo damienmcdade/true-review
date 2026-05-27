@@ -49,6 +49,26 @@ SELECT DISTINCT ?company ?companyLabel ?websiteUrl ?countryLabel WHERE {
 LIMIT 15000
 """
 
+# Second Wikidata pass — notable PRIVATE companies (i.e. without a stock-
+# exchange listing) that nonetheless have an English Wikipedia article.
+# Using a fixed set of business-class types instead of P279* recursion so
+# the query is fast enough for Wikidata's 60-second SPARQL timeout. Each
+# class roughly maps to: business / company / private company / for-profit
+# corporation / non-profit organisation / state-owned enterprise.
+WIKIDATA_PRIVATE_QUERY = """
+SELECT DISTINCT ?company ?companyLabel ?websiteUrl ?countryLabel WHERE {
+  VALUES ?type { wd:Q4830453 wd:Q783794 wd:Q6881511 wd:Q270791 wd:Q163740 wd:Q5621421 }
+  ?company wdt:P31 ?type .
+  ?article schema:about ?company .
+  ?article schema:isPartOf <https://en.wikipedia.org/> .
+  FILTER NOT EXISTS { ?company wdt:P414 ?exchange. }
+  OPTIONAL { ?company wdt:P856 ?websiteUrl. }
+  OPTIONAL { ?company wdt:P17 ?country. }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}
+LIMIT 20000
+"""
+
 
 def _slugify(text: str) -> str:
     s = re.sub(r"[^a-zA-Z0-9]+", "-", text.strip().lower()).strip("-")
@@ -106,37 +126,56 @@ def _extract_domain(url: str | None) -> str | None:
     return domain
 
 
-def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
-                        batch_size: int = 200) -> dict:
-    """Import publicly-listed companies from Wikidata's SPARQL endpoint.
-
-    Each Wikidata entity is filtered to those with a stock-exchange listing
-    AND an English-language label, which keeps the import to notable named
-    entities. The query is public-domain CC0 data.
-
-    Each imported Company:
-      - slug:        slugified label
-      - name:        Wikidata label
-      - kind:        BOTH
-      - domain:      extracted from Wikidata's official-website property
-      - description: "Publicly-listed company on {country}'s exchange."
-    """
-    log.info("Querying Wikidata SPARQL for publicly-listed companies")
+def _run_wikidata_query(query: str, label: str) -> list[dict]:
+    """Run one SPARQL query; return the bindings list (empty on failure)."""
+    log.info("Querying Wikidata SPARQL: %s", label)
     try:
-        with httpx.Client(timeout=90) as client:
+        with httpx.Client(timeout=120) as client:
             r = client.get(
                 WIKIDATA_SPARQL_URL,
-                params={"query": WIKIDATA_QUERY, "format": "json"},
+                params={"query": query, "format": "json"},
                 headers={
                     "User-Agent": USER_AGENT,
                     "Accept": "application/sparql-results+json",
                 },
             )
         r.raise_for_status()
-        bindings = r.json().get("results", {}).get("bindings", [])
+        return r.json().get("results", {}).get("bindings", []) or []
     except Exception as e:
-        log.warning("Wikidata fetch failed: %s", e)
-        return {"added": 0, "skipped": 0, "error": str(e)[:200]}
+        log.warning("Wikidata fetch failed (%s): %s", label, e)
+        return []
+
+
+def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
+                        batch_size: int = 200,
+                        include_private: bool = True) -> dict:
+    """Import companies from Wikidata's SPARQL endpoint.
+
+    Stage A — publicly-listed companies (have P414 stock-exchange listing).
+              Covers every global public market with an English label.
+    Stage B — private companies (no P414) that have an English Wikipedia
+              article. Covers Cargill, IKEA Group, SpaceX-pre-IPO, Mars,
+              Aldi Group, Bosch, Bloomberg, Bechtel, etc. — privately-held
+              majors people search for. Skipped if include_private=False.
+
+    Each Wikidata entity is the public-domain (CC0) Wikidata record.
+
+    Each imported Company:
+      - slug:        slugified label
+      - name:        Wikidata label
+      - kind:        BOTH
+      - domain:      extracted from Wikidata's official-website property
+      - description: "Publicly-listed company in {country}." OR
+                     "Private/notable company in {country}."
+    """
+    listed_bindings = _run_wikidata_query(WIKIDATA_QUERY, "publicly-listed")
+    private_bindings = (
+        _run_wikidata_query(WIKIDATA_PRIVATE_QUERY, "private + notable")
+        if include_private else []
+    )
+
+    if not listed_bindings and not private_bindings:
+        return {"added": 0, "skipped": 0, "error": "both Wikidata queries returned empty"}
 
     existing_slugs = set(session.exec(select(Company.slug)).all())
 
@@ -144,40 +183,50 @@ def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
     seen_slugs_this_run: set[str] = set()
     skipped = 0
 
-    for b in bindings:
-        if max_companies is not None and len(candidate_rows) >= max_companies:
-            break
-        label = (b.get("companyLabel", {}).get("value") or "").strip()
-        # Skip when SPARQL falls back to "Q12345" (no English label found)
-        if not label or label.startswith("Q") and label[1:].isdigit():
-            skipped += 1
-            continue
-        if _is_index_or_etf(label):
-            skipped += 1
-            continue
-        slug = _slugify(label)
-        if not slug or slug in existing_slugs or slug in seen_slugs_this_run:
-            skipped += 1
-            continue
-        seen_slugs_this_run.add(slug)
+    def harvest(bindings: list[dict], is_listed: bool) -> None:
+        nonlocal skipped
+        for b in bindings:
+            if max_companies is not None and len(candidate_rows) >= max_companies:
+                return
+            label = (b.get("companyLabel", {}).get("value") or "").strip()
+            if not label or (label.startswith("Q") and label[1:].isdigit()):
+                skipped += 1
+                continue
+            if _is_index_or_etf(label):
+                skipped += 1
+                continue
+            slug = _slugify(label)
+            if not slug or slug in existing_slugs or slug in seen_slugs_this_run:
+                skipped += 1
+                continue
+            seen_slugs_this_run.add(slug)
 
-        website = b.get("websiteUrl", {}).get("value")
-        domain = _extract_domain(website)
-        country = (b.get("countryLabel", {}).get("value") or "").strip()
+            website = b.get("websiteUrl", {}).get("value")
+            domain = _extract_domain(website)
+            country = (b.get("countryLabel", {}).get("value") or "").strip()
 
-        candidate_rows.append({
-            "slug": slug,
-            "name": label,
-            "domain": domain,
-            "country": country,
-        })
+            candidate_rows.append({
+                "slug": slug,
+                "name": label,
+                "domain": domain,
+                "country": country,
+                "listed": is_listed,
+            })
+
+    harvest(listed_bindings, is_listed=True)
+    harvest(private_bindings, is_listed=False)
 
     for i in range(0, len(candidate_rows), batch_size):
         chunk = candidate_rows[i:i + batch_size]
         for entry in chunk:
-            desc = "Publicly-listed company."
-            if entry["country"]:
-                desc = f"Publicly-listed company in {entry['country']}."
+            if entry["listed"]:
+                desc = "Publicly-listed company."
+                if entry["country"]:
+                    desc = f"Publicly-listed company in {entry['country']}."
+            else:
+                desc = "Privately-held / notable company."
+                if entry["country"]:
+                    desc = f"Privately-held / notable company in {entry['country']}."
             company = Company(
                 slug=entry["slug"],
                 name=entry["name"],
@@ -187,9 +236,15 @@ def bulk_import_wikidata(session: Session, *, max_companies: int | None = None,
             )
             session.add(company)
         session.commit()
-        log.info("Wikidata bulk-import progress: %d added", i + len(chunk))
+        log.info("Wikidata bulk-import progress: %d added (running total)",
+                 i + len(chunk))
 
-    return {"added": len(candidate_rows), "skipped": skipped}
+    return {
+        "added": len(candidate_rows),
+        "skipped": skipped,
+        "listed_returned": len(listed_bindings),
+        "private_returned": len(private_bindings),
+    }
 
 
 def bulk_import_edgar(session: Session, *, max_companies: int | None = None,

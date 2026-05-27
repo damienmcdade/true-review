@@ -94,11 +94,18 @@ async def lifespan(_: FastAPI):
                 _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
             count = len(session.exec(select(Company)).all())
 
-        if count < 12_000:
+        # Wikidata threshold bumped: now we expect both listed (~10k) and
+        # private notable (~15k) results, totaling ~25k entries when
+        # combined with EDGAR. Re-run while under the higher threshold.
+        if count < 30_000:
             try:
                 result = bulk_import_wikidata(session)
-                _log.info("Wikidata bulk import: added=%s skipped=%s",
-                          result.get("added"), result.get("skipped"))
+                _log.info(
+                    "Wikidata bulk import: added=%s skipped=%s "
+                    "listed_returned=%s private_returned=%s",
+                    result.get("added"), result.get("skipped"),
+                    result.get("listed_returned"), result.get("private_returned"),
+                )
             except Exception as e:  # noqa: BLE001
                 _log.warning("Wikidata bulk import failed (non-fatal): %s", e)
     yield
@@ -206,6 +213,30 @@ def root():
 # --------------------------------------------------------------------------- #
 # Companies
 # --------------------------------------------------------------------------- #
+
+@app.get("/companies/stats")
+@limiter.limit("30/minute")
+def companies_stats(request: Request, session: Session = Depends(get_session)):
+    """Catalog size + simple distribution. Useful for ops + audit checks."""
+    from sqlalchemy import func
+    total = session.exec(select(func.count(Company.id))).first() or 0
+    flagged = session.exec(
+        select(func.count(Company.id)).where(Company.is_scam_flagged.is_(True))
+    ).first() or 0
+    with_reviews = session.exec(
+        select(func.count(func.distinct(Review.company_id)))
+        .where(Review.is_published.is_(True))
+    ).first() or 0
+    reviews_total = session.exec(
+        select(func.count(Review.id)).where(Review.is_published.is_(True))
+    ).first() or 0
+    return {
+        "total_companies": int(total),
+        "flagged_companies": int(flagged),
+        "companies_with_reviews": int(with_reviews),
+        "total_published_reviews": int(reviews_total),
+    }
+
 
 @app.get("/companies", response_model=list[CompanySearchResult])
 @limiter.limit("120/minute")
