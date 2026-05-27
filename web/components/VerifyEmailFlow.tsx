@@ -1,0 +1,214 @@
+'use client';
+
+import { useState, useTransition } from 'react';
+import { Loader2, Send, ShieldCheck, AlertCircle } from 'lucide-react';
+
+type StartResp = {
+  token: string;
+  domain: string;
+  expires_in_seconds: number;
+  email_sent: boolean;
+  delivery: 'resend' | 'log' | null;
+  delivery_error?: string | null;
+};
+
+type ConfirmResp = {
+  verified: boolean;
+  domain: string;
+  company_slug: string | null;
+  tier: string;
+};
+
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export default function VerifyEmailFlow({ className }: { className?: string }) {
+  const [email, setEmail] = useState('');
+  const [companySlug, setCompanySlug] = useState('');
+  const [started, setStarted] = useState<StartResp | null>(null);
+  const [otp, setOtp] = useState('');
+  const [done, setDone] = useState<ConfirmResp | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function startVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setError('Enter a valid email address.');
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const res = await fetch(`${API}/verify/email/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, company_slug: companySlug || undefined })
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          setError(txt.slice(0, 300));
+          return;
+        }
+        setStarted((await res.json()) as StartResp);
+      } catch {
+        setError('Could not reach the API.');
+      }
+    });
+  }
+
+  function confirmOtp(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!/^\d{6}$/.test(otp)) {
+      setError('OTP must be 6 digits.');
+      return;
+    }
+    if (!started) return;
+    startTransition(async () => {
+      try {
+        const res = await fetch(`${API}/verify/email/confirm`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: started.token, otp })
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          setError(txt.slice(0, 300));
+          return;
+        }
+        setDone((await res.json()) as ConfirmResp);
+      } catch {
+        setError('Could not reach the API.');
+      }
+    });
+  }
+
+  if (done) {
+    return (
+      <div className={className}>
+        <div className="rounded-2xl border border-verified/40 bg-verified/10 p-5">
+          <div className="flex items-center gap-2 font-semibold text-verified">
+            <ShieldCheck className="h-5 w-5" />
+            Verified
+          </div>
+          <p className="mt-2 text-sm text-ink/80">
+            You&apos;re verified at <strong>{done.domain}</strong> (tier {done.tier}). Your
+            reviews on True Review will now carry an anonymous &ldquo;verified employee&rdquo;
+            badge.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (started) {
+    return (
+      <form onSubmit={confirmOtp} className={className}>
+        <p className="text-sm text-ink/80">
+          We sent a 6-digit code to your work email at <strong>@{started.domain}</strong>. Enter
+          it below within 10 minutes.
+        </p>
+        {!started.email_sent && started.delivery === 'log' ? (
+          <div className="mt-3 flex items-start gap-2 rounded-2xl border border-warn/40 bg-warn/10 p-3 text-xs text-warn">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div>
+              Email delivery isn&apos;t configured on this preview deployment (Resend not set).
+              For a live demo, the code is logged on the API server side. Once <code className="font-mono">RESEND_API_KEY</code> is set on Railway, real emails will go out.
+            </div>
+          </div>
+        ) : null}
+
+        <Label className="mt-5">6-digit code</Label>
+        <input
+          inputMode="numeric"
+          autoFocus
+          maxLength={6}
+          value={otp}
+          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+          placeholder="123456"
+          className="mt-1 w-full rounded-full border border-white/60 bg-white/80 px-4 py-3 text-center font-mono text-lg tracking-[0.5em] text-ink outline-none focus:border-ocean"
+        />
+
+        {error ? (
+          <p className="mt-3 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+
+        <div className="mt-5 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => {
+              setStarted(null);
+              setOtp('');
+              setError(null);
+            }}
+            className="text-sm text-ink/55 hover:text-ink/80"
+          >
+            Start over
+          </button>
+          <button
+            type="submit"
+            disabled={pending || otp.length !== 6}
+            className="inline-flex items-center gap-2 rounded-full bg-ocean px-5 py-2.5 text-sm font-medium text-white hover:bg-oceanDeep disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            Confirm
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <form onSubmit={startVerify} className={className}>
+      <Label>Work email</Label>
+      <input
+        type="email"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@yourcompany.com"
+        className="mt-1 w-full rounded-full border border-white/60 bg-white/80 px-4 py-3 text-ink outline-none focus:border-ocean"
+      />
+      <p className="mt-1 text-xs text-ink/55">
+        Gmail/Yahoo/Outlook are rejected — your address must be a company-issued mailbox.
+      </p>
+
+      <Label className="mt-4">Company slug (optional)</Label>
+      <input
+        value={companySlug}
+        onChange={(e) => setCompanySlug(e.target.value)}
+        placeholder="e.g. patagonia"
+        className="mt-1 w-full rounded-full border border-white/60 bg-white/80 px-4 py-3 text-ink outline-none focus:border-ocean"
+      />
+
+      {error ? (
+        <p className="mt-3 rounded-2xl border border-danger/30 bg-danger/5 p-3 text-sm text-danger">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-5 flex items-center justify-end">
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex items-center gap-2 rounded-full bg-ocean px-5 py-2.5 text-sm font-medium text-white hover:bg-oceanDeep disabled:opacity-50"
+        >
+          {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          Send code
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Label({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <label className={'block text-xs font-semibold uppercase tracking-wider text-ink/55 ' + (className ?? '')}>
+      {children}
+    </label>
+  );
+}

@@ -13,9 +13,10 @@ export default function HomePage() {
         </Link>
         <div className="flex items-center gap-5 text-sm text-ink/75">
           <Link href="/search" className="hover:text-ink">Search</Link>
+          <Link href="/scam-check" className="hover:text-ink">Scam check</Link>
           <Link href="/scam-alerts" className="flex items-center gap-1 text-scam hover:text-danger">
             <AlertTriangle className="h-4 w-4" />
-            Scam alerts
+            Alerts
           </Link>
           <Link href="/transparency" className="hover:text-ink">Transparency</Link>
           <Link

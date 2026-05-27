@@ -40,6 +40,14 @@ from .security import (
     harden_prompt_input,
 )
 from .audit import log_event, SecurityEvent  # noqa: F401 — imported for table registration
+from .enrichment import (
+    fetch_wikipedia_summary,
+    fetch_opencorporates,
+    fetch_edgar,
+    fetch_urlhaus,
+)
+from .email import send_otp
+from .models import EmailVerification  # noqa: F401 — registers table
 
 settings = get_settings()
 
@@ -417,6 +425,238 @@ def submit_review(
         created_at=review.created_at.isoformat(),
         author_handle=user.handle,
     )
+
+
+# --------------------------------------------------------------------------- #
+# External enrichment — real public data
+# --------------------------------------------------------------------------- #
+
+@app.get("/enrichment/wikipedia")
+@limiter.limit("60/minute")
+async def enrichment_wikipedia(request: Request, name: str = Query(..., min_length=2, max_length=120)):
+    return await fetch_wikipedia_summary(sanitize_text(name, max_len=120))
+
+
+@app.get("/enrichment/opencorporates")
+@limiter.limit("30/minute")
+async def enrichment_opencorporates(request: Request, name: str = Query(..., min_length=2, max_length=120)):
+    return await fetch_opencorporates(sanitize_text(name, max_len=120))
+
+
+@app.get("/enrichment/edgar")
+@limiter.limit("30/minute")
+async def enrichment_edgar(request: Request, name: str = Query(..., min_length=2, max_length=120)):
+    return await fetch_edgar(sanitize_text(name, max_len=120))
+
+
+@app.get("/enrichment/urlhaus")
+@limiter.limit("60/minute")
+async def enrichment_urlhaus(request: Request, domain: str = Query(..., min_length=3, max_length=253)):
+    return await fetch_urlhaus(sanitize_text(domain, max_len=253).lower())
+
+
+@app.get("/scam-check")
+@limiter.limit("30/minute")
+async def scam_check(
+    request: Request,
+    domain: str = Query(..., min_length=3, max_length=253),
+    session: Session = Depends(get_session),
+):
+    """Combined scam check: internal reports + URLhaus.
+
+    Returns the verdict + evidence with cited sources so the UI can
+    present it neutrally.
+    """
+    safe = sanitize_text(domain, max_len=253).lower().strip()
+    safe = safe.replace("https://", "").replace("http://", "").split("/")[0]
+
+    # Internal — match company by domain (exact) or by slug containing domain root.
+    internal = session.exec(
+        select(Company).where(Company.domain == safe)
+    ).first()
+    internal_reports = 0
+    if internal:
+        internal_reports = len(
+            session.exec(
+                select(Review).where(
+                    Review.company_id == internal.id,
+                    Review.review_type == ReviewType.SCAM_REPORT,
+                    Review.is_published.is_(True),
+                )
+            ).all()
+        )
+
+    urlhaus = await fetch_urlhaus(safe)
+
+    verdict = "no_signal"
+    if (internal and internal.is_scam_flagged) or urlhaus.get("found"):
+        verdict = "flagged"
+    elif internal_reports > 0:
+        verdict = "pending_review"
+
+    return {
+        "domain": safe,
+        "verdict": verdict,
+        "internal": {
+            "company": {
+                "name": internal.name,
+                "slug": internal.slug,
+                "is_scam_flagged": internal.is_scam_flagged,
+                "scam_reports_count": internal.scam_reports_count or 0,
+            } if internal else None,
+            "report_count": internal_reports,
+        },
+        "urlhaus": urlhaus,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# Workplace verifier — T1 work-email OTP
+# --------------------------------------------------------------------------- #
+
+FREE_EMAIL_DOMAINS = {
+    "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com",
+    "aol.com", "proton.me", "protonmail.com", "live.com", "msn.com",
+    "ymail.com", "gmx.com", "mail.com", "fastmail.com",
+}
+
+
+def _otp() -> str:
+    import secrets
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
+def _hash(value: str) -> str:
+    import hashlib
+    salt = os.environ.get("VERIFY_HASH_SALT", "true-review-verify-salt-rotate-me")
+    import hashlib as _h
+    return _h.sha256(f"{salt}::{value}".encode()).hexdigest()
+
+
+import os  # noqa: E402
+
+@app.post("/verify/email/start")
+@limiter.limit("3/minute;15/day")
+async def verify_email_start(
+    request: Request,
+    body: dict,
+    session: Session = Depends(get_session),
+):
+    """Begin work-email verification.
+
+    Body: { email, company_slug? }
+
+    Free webmail domains (gmail, yahoo, etc.) are rejected — T1 is meant
+    to prove employment via a company-issued mailbox. We hash the email
+    before storing it (the DB never holds the raw value).
+    """
+    email = sanitize_text((body or {}).get("email", ""), max_len=200).strip().lower()
+    company_slug = sanitize_text((body or {}).get("company_slug", ""), max_len=200).strip().lower() or None
+
+    if "@" not in email or len(email) < 6:
+        raise HTTPException(400, "Valid email required")
+    domain = email.rsplit("@", 1)[-1]
+    if domain in FREE_EMAIL_DOMAINS:
+        raise HTTPException(
+            400,
+            "Free webmail domains (gmail, yahoo, etc.) are not accepted for T1 verification. "
+            "Use your work email.",
+        )
+    if not re.match(r"^[a-zA-Z0-9.-]{3,253}$", domain):
+        raise HTTPException(400, "Invalid domain")
+
+    company_name = None
+    if company_slug:
+        c = session.exec(select(Company).where(Company.slug == company_slug)).first()
+        if c:
+            company_name = c.name
+
+    from uuid import uuid4
+    token = uuid4().hex
+    otp = _otp()
+    from datetime import timedelta
+    record = EmailVerification(
+        token=token,
+        email_hash=_hash(email),
+        domain=domain,
+        company_slug=company_slug,
+        otp_hash=_hash(otp),
+        expires_at=datetime.utcnow() + timedelta(minutes=10),
+    )
+    session.add(record)
+
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else None)
+    log_event(
+        session,
+        event_type="verify_email_start",
+        actor_ip_hash=hash_ip(ip),
+        target_id=token,
+        payload={"domain": domain, "company_slug": company_slug},
+    )
+    session.commit()
+
+    result = await send_otp(email, otp, company_name=company_name)
+    return {
+        "token": token,
+        "domain": domain,
+        "expires_in_seconds": 600,
+        "email_sent": result.get("sent", False),
+        "delivery": result.get("channel"),
+        "delivery_error": result.get("error"),
+    }
+
+
+@app.post("/verify/email/confirm")
+@limiter.limit("10/minute;30/day")
+async def verify_email_confirm(
+    request: Request,
+    body: dict,
+    session: Session = Depends(get_session),
+):
+    """Confirm OTP. Body: { token, otp }"""
+    import re as _re
+    token = sanitize_text((body or {}).get("token", ""), max_len=64)
+    otp = sanitize_text((body or {}).get("otp", ""), max_len=12).strip()
+    if not token or not _re.fullmatch(r"\d{6}", otp):
+        raise HTTPException(400, "token and 6-digit otp required")
+
+    rec = session.exec(select(EmailVerification).where(EmailVerification.token == token)).first()
+    if not rec:
+        raise HTTPException(404, "verification not found")
+    if rec.consumed_at:
+        raise HTTPException(410, "verification already used")
+    if rec.expires_at < datetime.utcnow():
+        raise HTTPException(410, "verification expired")
+    if rec.attempts >= 5:
+        raise HTTPException(429, "too many attempts")
+
+    rec.attempts += 1
+    if _hash(otp) != rec.otp_hash:
+        session.add(rec)
+        session.commit()
+        raise HTTPException(401, "incorrect code")
+
+    rec.consumed_at = datetime.utcnow()
+    session.add(rec)
+
+    fwd = request.headers.get("x-forwarded-for", "")
+    ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else None)
+    log_event(
+        session,
+        event_type="verify_email_confirm",
+        actor_ip_hash=hash_ip(ip),
+        target_id=token,
+        payload={"domain": rec.domain, "company_slug": rec.company_slug},
+    )
+    session.commit()
+
+    return {
+        "verified": True,
+        "domain": rec.domain,
+        "company_slug": rec.company_slug,
+        "tier": "t1_email",
+    }
 
 
 # --------------------------------------------------------------------------- #

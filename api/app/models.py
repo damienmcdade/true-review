@@ -117,6 +117,27 @@ class Review(SQLModel, table=True):
     fake_probability: Optional[float] = None
 
 
+class EmailVerification(SQLModel, table=True):
+    """One-time-password records for the T1 work-email verification flow.
+
+    Tokens are short-lived (10 minutes). We never store the raw email or OTP —
+    only salted SHA-256 hashes — so a database leak can't reveal contact info
+    or be replayed by an attacker.
+    """
+    __tablename__ = "email_verifications"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    token: str = Field(unique=True, index=True)
+    email_hash: str = Field(index=True)
+    domain: str
+    company_slug: Optional[str] = Field(default=None, index=True)
+    otp_hash: str
+    expires_at: datetime
+    consumed_at: Optional[datetime] = None
+    attempts: int = 0
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 class ModerationAction(str, Enum):
     REMOVED = "removed"
     EDITED = "edited"

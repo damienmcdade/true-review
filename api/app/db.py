@@ -48,7 +48,7 @@ _REQUIRED_REVIEW_COLUMNS = {
 
 
 def _schema_is_out_of_sync(insp) -> bool:
-    """True if existing tables exist but are missing v0.3 columns."""
+    """True if existing tables exist but are missing v0.3+ columns/tables."""
     tables = set(insp.get_table_names())
     if "companies" in tables:
         existing = {c["name"] for c in insp.get_columns("companies")}
@@ -58,6 +58,10 @@ def _schema_is_out_of_sync(insp) -> bool:
         existing = {c["name"] for c in insp.get_columns("reviews")}
         if not _REQUIRED_REVIEW_COLUMNS.issubset(existing):
             return True
+    # v0.4: email_verifications table introduced. If users/companies exist
+    # without it, recreate so the new feature works.
+    if tables and "users" in tables and "email_verifications" not in tables:
+        return True
     return False
 
 
@@ -72,9 +76,8 @@ def init_db() -> None:
     if _schema_is_out_of_sync(insp):
         log.warning("Pre-v0.3 schema detected on existing tables. Dropping and recreating.")
         with engine.begin() as conn:
-            # Drop CASCADE so foreign keys don't block us.
             for tbl in ("security_events", "moderation_log", "employment_proofs",
-                        "reviews", "users", "companies"):
+                        "email_verifications", "reviews", "users", "companies"):
                 conn.execute(text(f'DROP TABLE IF EXISTS "{tbl}" CASCADE'))
     SQLModel.metadata.create_all(engine)
 

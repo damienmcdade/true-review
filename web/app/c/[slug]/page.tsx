@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, Briefcase, ShoppingBag, Sparkles, Star } from 'lucide-react';
+import { AlertTriangle, Briefcase, ShoppingBag, Sparkles, Star, BookOpen, FileText, Building } from 'lucide-react';
 import AdSlot from '@/components/AdSlot';
 
 type Company = {
@@ -46,6 +46,49 @@ async function getCompany(slug: string): Promise<Company | null> {
   }
 }
 
+async function getWikipedia(name: string) {
+  try {
+    const res = await fetch(`${API}/enrichment/wikipedia?name=${encodeURIComponent(name)}`, {
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { found: boolean; extract?: string; url?: string; thumbnail?: string };
+  } catch {
+    return null;
+  }
+}
+
+async function getEdgar(name: string) {
+  try {
+    const res = await fetch(`${API}/enrichment/edgar?name=${encodeURIComponent(name)}`, {
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as {
+      found: boolean;
+      ticker?: string;
+      title?: string;
+      sic?: string;
+      recent_filings?: Array<{ form: string; date: string; url: string }>;
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function getUrlhaus(domain?: string) {
+  if (!domain) return null;
+  try {
+    const res = await fetch(`${API}/enrichment/urlhaus?domain=${encodeURIComponent(domain)}`, {
+      next: { revalidate: 600 }
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as { checked: boolean; found?: boolean; threat_count?: number };
+  } catch {
+    return null;
+  }
+}
+
 async function getReviews(slug: string, reviewType?: string): Promise<ReviewItem[]> {
   const params = new URLSearchParams();
   if (reviewType) params.set('review_type', reviewType);
@@ -79,9 +122,12 @@ export default async function CompanyPage({
   const { tab } = await searchParams;
   const activeTab = tab && ['employment', 'shopping', 'scam_report'].includes(tab) ? tab : 'all';
 
-  const [company, reviews] = await Promise.all([
-    getCompany(slug),
-    getReviews(slug, activeTab === 'all' ? undefined : activeTab)
+  const company = await getCompany(slug);
+  const [reviews, wiki, edgar, urlhaus] = await Promise.all([
+    getReviews(slug, activeTab === 'all' ? undefined : activeTab),
+    company ? getWikipedia(company.name) : Promise.resolve(null),
+    company ? getEdgar(company.name) : Promise.resolve(null),
+    company?.domain ? getUrlhaus(company.domain) : Promise.resolve(null)
   ]);
 
   if (!company) {
@@ -148,6 +194,69 @@ export default async function CompanyPage({
           </div>
         ) : null}
       </header>
+
+      {urlhaus?.checked && urlhaus?.found ? (
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-scam/40 bg-scam/10 p-4 text-sm">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-scam" />
+          <div>
+            <div className="font-semibold text-scam">URLhaus listing</div>
+            <div className="text-ink/75">
+              {company.domain} is on the live URLhaus malicious-URL feed
+              {urlhaus.threat_count ? ` with ${urlhaus.threat_count} threat URL(s)` : ''}.
+              Source: abuse.ch / Cisco Talos.
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {wiki?.found && wiki.extract ? (
+        <section className="glass mt-6 rounded-2xl p-5">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-oceanDeep">
+            <BookOpen className="h-3.5 w-3.5" />
+            Wikipedia
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-ink/80">{wiki.extract}</p>
+          {wiki.url ? (
+            <a
+              href={wiki.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block text-xs text-oceanDeep underline"
+            >
+              Read full article →
+            </a>
+          ) : null}
+        </section>
+      ) : null}
+
+      {edgar?.found && edgar.recent_filings && edgar.recent_filings.length > 0 ? (
+        <section className="glass mt-4 rounded-2xl p-5">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-oceanDeep">
+            <FileText className="h-3.5 w-3.5" />
+            SEC EDGAR — recent filings
+          </div>
+          {edgar.ticker ? (
+            <p className="mt-1 text-xs text-ink/55">
+              {edgar.title} · {edgar.ticker} · {edgar.sic ?? ''}
+            </p>
+          ) : null}
+          <ul className="mt-2 space-y-1 text-sm">
+            {edgar.recent_filings.slice(0, 5).map((f) => (
+              <li key={f.url} className="flex justify-between gap-2 text-ink/75">
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs underline"
+                >
+                  {f.form}
+                </a>
+                <span className="text-xs text-ink/45">{f.date}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="mt-6 grid gap-4 sm:grid-cols-3">
         <Stat icon={<Briefcase className="h-4 w-4 text-ocean" />} label="Employment reviews" value={company.employment_review_count} />
