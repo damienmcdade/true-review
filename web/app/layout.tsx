@@ -16,10 +16,18 @@ export const metadata: Metadata = {
 
 const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT;
 
+import CookieConsent from '@/components/CookieConsent';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen font-sans text-ink">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-ink focus:px-3 focus:py-2 focus:text-white"
+        >
+          Skip to main content
+        </a>
         <BeachBackground />
         {ADSENSE_CLIENT ? (
           <Script
@@ -30,7 +38,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             crossOrigin="anonymous"
           />
         ) : null}
-        {children}
+        <div id="main">{children}</div>
+        <CookieConsent />
       </body>
     </html>
   );

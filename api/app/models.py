@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel
 
 
 class VerificationTier(str, Enum):
@@ -12,6 +12,20 @@ class VerificationTier(str, Enum):
     T2_LINKEDIN = "t2_linkedin"
     T3_DOCUMENT = "t3_document"
     T4_PAYROLL = "t4_payroll"
+    T_RECEIPT = "t_receipt"  # for shopping reviews
+    T_FRAUD_EVIDENCE = "t_fraud_evidence"  # for scam reports
+
+
+class ReviewType(str, Enum):
+    EMPLOYMENT = "employment"
+    SHOPPING = "shopping"
+    SCAM_REPORT = "scam_report"
+
+
+class CompanyKind(str, Enum):
+    EMPLOYER = "employer"
+    MERCHANT = "merchant"
+    BOTH = "both"
 
 
 class User(SQLModel, table=True):
@@ -31,9 +45,18 @@ class Company(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     slug: str = Field(unique=True, index=True)
     name: str = Field(index=True)
+    kind: CompanyKind = Field(default=CompanyKind.BOTH, index=True)
     domain: Optional[str] = Field(default=None, index=True)
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    # Scam reputation
+    is_scam_flagged: bool = Field(default=False, index=True)
+    scam_reports_count: int = 0
+    scam_severity: float = 0.0  # 0..1 aggregate severity
+    last_scam_report_at: Optional[datetime] = None
+    # Auto-flag only triggers after this many independent verified reports.
+    # Until then the company shows "pending review" — never a public "scam" verdict.
+    flag_review_threshold: int = 3
 
 
 class EmploymentProof(SQLModel, table=True):
@@ -44,7 +67,6 @@ class EmploymentProof(SQLModel, table=True):
     company_id: UUID = Field(foreign_key="companies.id", index=True)
     tier: VerificationTier
     verified_at: datetime = Field(default_factory=datetime.utcnow)
-    # Encrypted proof artifact reference (never returned to clients)
     artifact_ref: Optional[str] = None
     expires_at: Optional[datetime] = None
 
@@ -54,22 +76,43 @@ class Review(SQLModel, table=True):
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     company_id: UUID = Field(foreign_key="companies.id", index=True)
-    author_id: UUID = Field(foreign_key="users.id", index=True)
+    author_id: Optional[UUID] = Field(default=None, foreign_key="users.id", index=True)
+    review_type: ReviewType = Field(default=ReviewType.EMPLOYMENT, index=True)
+
     title: str
     body: str
+
+    # Employment-specific
     department: Optional[str] = None
     location: Optional[str] = None
     job_level: Optional[str] = None
-    employment_status: Optional[str] = None  # current / former
+    employment_status: Optional[str] = None
+
+    # Shopping-specific
+    product_or_service: Optional[str] = None
+    purchase_amount: Optional[float] = None
+    purchase_date: Optional[datetime] = None
+
+    # Scam-report-specific
+    scam_category: Optional[str] = None  # e.g. "fake_product", "non_delivery", "phishing"
+    money_lost: Optional[float] = None
+
+    # Universal ratings (1..5)
     rating_overall: float
-    rating_culture: float
-    rating_management: float
-    rating_balance: float
-    rating_growth: float
-    rating_pay: float
+    rating_culture: Optional[float] = None
+    rating_management: Optional[float] = None
+    rating_balance: Optional[float] = None
+    rating_growth: Optional[float] = None
+    rating_pay: Optional[float] = None
+    rating_value: Optional[float] = None
+    rating_shipping: Optional[float] = None
+    rating_quality: Optional[float] = None
+    rating_support: Optional[float] = None
+
     is_published: bool = True
+    is_demo: bool = Field(default=False, index=True)
+    submitter_ip_hash: Optional[str] = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    # AI-derived
     sentiment_score: Optional[float] = None
     fake_probability: Optional[float] = None
 

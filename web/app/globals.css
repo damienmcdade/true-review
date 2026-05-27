@@ -4,40 +4,41 @@
 
 :root {
   color-scheme: light;
-  --sand: #fff4e3;
-  --sand-deep: #f4d9b0;
-  --seafoam: #9bd9d2;
-  --ocean: #3a8fa3;
-  --ocean-deep: #1f5d6e;
-  --coral: #ff8a65;
-  --sunset: #ffb38a;
-  --ink: #1f2a2e;
+  --sand: #fffaf0;
+  --sand-deep: #ffe9b8;
+  --foam: #e8f8f7;
+  --seafoam: #6ee2d0;
+  --ocean: #2bb5c4;
+  --ocean-deep: #0d6a8a;
+  --coral: #ff7a5a;
+  --sunset: #ffd166;
+  --ink: #0d3b4a;
 }
 
 html, body {
-  background: var(--sand);
+  background: #6ee2d0;
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
 
 /* Frosted card on top of the animated beach */
 .glass {
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
-  box-shadow: 0 10px 40px -20px rgba(31, 93, 110, 0.25);
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 12px 50px -22px rgba(13, 106, 138, 0.35);
 }
 
 .glass-dark {
-  background: rgba(31, 42, 46, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  background: rgba(13, 59, 74, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
   color: #fff;
 }
 
-/* ---------- Animated beach background ---------- */
+/* ---------- Animated tropical beach background ---------- */
 
 .beach {
   position: fixed;
@@ -46,40 +47,63 @@ html, body {
   overflow: hidden;
   background: linear-gradient(
     180deg,
-    #ffd9b0 0%,
-    #ffb38a 18%,
-    #ffd0a0 30%,
-    #9bd9d2 55%,
-    #3a8fa3 75%,
-    #f4d9b0 90%,
-    #fff4e3 100%
+    #ffe9b8 0%,
+    #ffd166 12%,
+    #ffb38a 22%,
+    #7fe1d8 42%,
+    #2bb5c4 60%,
+    #0d6a8a 82%,
+    #fff5d6 95%,
+    #fffaf0 100%
   );
-  background-size: 100% 220%;
-  animation: skyShift 60s ease-in-out infinite alternate;
+  background-size: 100% 200%;
+  animation: skyShift 50s ease-in-out infinite alternate;
 }
 
 @keyframes skyShift {
   0%   { background-position: 0% 0%; }
-  100% { background-position: 0% 30%; }
+  100% { background-position: 0% 35%; }
 }
 
+/* Bright tropical sun */
 .beach .sun {
   position: absolute;
-  top: 18%;
-  left: 50%;
-  width: 18vmax;
-  height: 18vmax;
+  top: 22%;
+  left: 70%;
+  width: 22vmax;
+  height: 22vmax;
   border-radius: 50%;
-  background: radial-gradient(circle, #fff2c4 0%, #ffd28a 40%, rgba(255, 179, 138, 0) 70%);
+  background:
+    radial-gradient(circle, #fffbe6 0%, #ffd166 25%, rgba(255, 209, 102, 0.6) 45%, rgba(255, 122, 90, 0) 70%);
   transform: translate(-50%, -50%);
-  filter: blur(2px);
-  animation: sunPulse 8s ease-in-out infinite alternate;
+  filter: blur(0.5px);
+  animation: sunPulse 6s ease-in-out infinite alternate;
   mix-blend-mode: screen;
 }
 
 @keyframes sunPulse {
-  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
-  100% { transform: translate(-52%, -48%) scale(1.06); opacity: 1; }
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+}
+
+/* Bright sun glare on water (vertical reflection) */
+.beach .sun-glare {
+  position: absolute;
+  top: 30%;
+  left: 70%;
+  width: 8vmax;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255, 251, 230, 0.7) 0%, rgba(255, 209, 102, 0) 90%);
+  filter: blur(8px);
+  transform: translateX(-50%);
+  animation: glarePulse 4s ease-in-out infinite alternate;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+@keyframes glarePulse {
+  0% { opacity: 0.5; transform: translateX(-50%) scaleY(1); }
+  100% { opacity: 0.85; transform: translateX(-48%) scaleY(1.05); }
 }
 
 .beach svg.waves {
@@ -87,8 +111,8 @@ html, body {
   left: 0;
   right: 0;
   width: 100%;
-  height: 60%;
-  bottom: 12%;
+  height: 65%;
+  bottom: 6%;
 }
 
 .beach .wave path {
@@ -103,48 +127,132 @@ html, body {
   100% { transform: translateX(-25%); }
 }
 
+/* Thin pale sand strip at the very bottom */
 .beach .sand-fg {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 18%;
+  height: 8%;
   background:
-    radial-gradient(ellipse at 20% 20%, rgba(255, 255, 255, 0.4), transparent 60%),
-    linear-gradient(180deg, #f4d9b0 0%, #e8c490 80%);
-  animation: sandShimmer 20s ease-in-out infinite alternate;
+    radial-gradient(ellipse at 30% 30%, rgba(255, 255, 255, 0.6), transparent 65%),
+    linear-gradient(180deg, #fff5d6 0%, #ffe9b8 100%);
+  animation: sandShimmer 18s ease-in-out infinite alternate;
 }
 
 @keyframes sandShimmer {
-  0%   { filter: brightness(1); }
-  100% { filter: brightness(1.05); }
+  0%   { filter: brightness(1) saturate(1); }
+  100% { filter: brightness(1.07) saturate(1.1); }
 }
 
 /* Drifting glints on the water */
 .beach .glint {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  filter: blur(1px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  filter: blur(0.5px);
   animation: glintFloat linear infinite;
   opacity: 0;
 }
 
 @keyframes glintFloat {
   0%   { transform: translate(0, 0) scale(0.6); opacity: 0; }
-  20%  { opacity: 0.9; }
-  80%  { opacity: 0.9; }
-  100% { transform: translate(60px, -20px) scale(1.2); opacity: 0; }
+  15%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(80px, -28px) scale(1.3); opacity: 0; }
+}
+
+/* Soft drifting clouds */
+.beach .cloud {
+  position: absolute;
+  top: 8%;
+  width: 240px;
+  height: 50px;
+  background:
+    radial-gradient(40px 30px at 50px 30px, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(60px 38px at 130px 24px, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(40px 26px at 200px 30px, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%);
+  filter: blur(1px);
+  animation: cloudDrift linear infinite;
+  pointer-events: none;
+}
+
+.beach .cloud.c1 { top: 6%;  animation-duration: 90s; }
+.beach .cloud.c2 { top: 12%; animation-duration: 130s; opacity: 0.7; }
+.beach .cloud.c3 { top: 18%; animation-duration: 110s; opacity: 0.5; }
+
+@keyframes cloudDrift {
+  0%   { transform: translateX(-260px); }
+  100% { transform: translateX(110vw); }
+}
+
+/* Silhouetted seabird flapping across */
+.beach .bird {
+  position: absolute;
+  top: 26%;
+  width: 22px;
+  height: 12px;
+  color: rgba(13, 59, 74, 0.55);
+  animation: birdFly linear infinite;
+  pointer-events: none;
+}
+.beach .bird.b1 { top: 24%; animation-duration: 70s; }
+.beach .bird.b2 { top: 30%; animation-duration: 95s; animation-delay: -30s; }
+
+@keyframes birdFly {
+  0%   { transform: translate(-50px, 0); }
+  50%  { transform: translate(50vw, -14px); }
+  100% { transform: translate(110vw, 0); }
+}
+
+.beach .bird svg {
+  width: 100%;
+  height: 100%;
+  animation: birdFlap 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes birdFlap {
+  0%   { transform: scaleY(1); }
+  100% { transform: scaleY(0.7); }
+}
+
+/* Palm fronds — left bottom corner */
+.beach .palm {
+  position: absolute;
+  bottom: 4%;
+  width: 200px;
+  height: 240px;
+  pointer-events: none;
+  transform-origin: bottom center;
+  animation: palmSway 8s ease-in-out infinite alternate;
+}
+.beach .palm.left  { left: -20px; }
+.beach .palm.right { right: -20px; transform: scaleX(-1); animation-duration: 11s; }
+
+@keyframes palmSway {
+  0%   { transform: rotate(-1deg); }
+  100% { transform: rotate(2deg); }
+}
+.beach .palm.right { animation-name: palmSwayRight; }
+@keyframes palmSwayRight {
+  0%   { transform: scaleX(-1) rotate(-2deg); }
+  100% { transform: scaleX(-1) rotate(1deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .beach,
   .beach .sun,
+  .beach .sun-glare,
   .beach .wave path,
   .beach .sand-fg,
-  .beach .glint {
+  .beach .glint,
+  .beach .cloud,
+  .beach .bird,
+  .beach .bird svg,
+  .beach .palm {
     animation: none !important;
   }
 }

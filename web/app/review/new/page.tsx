@@ -1,27 +1,25 @@
 import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
+import ReviewForm from '@/components/ReviewForm';
 
 export default function NewReviewPage() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12">
-      <Link href="/" className="text-sm text-ink/50 hover:text-ink/80">
+    <main className="mx-auto max-w-2xl px-6 py-10">
+      <Link href="/" className="text-sm text-ink/55 hover:text-ink/80">
         ← True Review
       </Link>
       <div className="glass mt-6 rounded-3xl p-8">
         <h1 className="flex items-center gap-3 font-display text-3xl font-semibold tracking-tight">
           <ShieldCheck className="h-7 w-7 text-verified" />
-          Write a verified review
+          Submit a review
         </h1>
-        <p className="mt-4 text-ink/70">
-          Before you can submit a review, prove you worked at the company. Your identity is
-          never exposed — only an anonymous badge proving the employment relationship.
+        <p className="mt-3 text-ink/75">
+          Share an employment experience, a shopping experience, or report a scam. Be specific —
+          your post lands on the company&apos;s page and feeds the AI copilot&apos;s answers. Full
+          identity verification is required before posts appear publicly; for this preview build,
+          submissions go straight in as anonymous.
         </p>
-        <Link
-          href="/verify"
-          className="mt-6 inline-flex rounded-full bg-ocean px-5 py-2.5 font-medium text-white hover:bg-oceanDeep"
-        >
-          Start verification →
-        </Link>
+        <ReviewForm className="mt-6" />
       </div>
     </main>
   );

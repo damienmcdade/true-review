@@ -6,18 +6,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        sand: '#fff4e3',
-        sandDeep: '#f4d9b0',
-        seafoam: '#9bd9d2',
-        ocean: '#3a8fa3',
-        oceanDeep: '#1f5d6e',
-        coral: '#ff8a65',
-        sunset: '#ffb38a',
+        sand: '#fffaf0',
+        sandDeep: '#ffe9b8',
+        foam: '#e8f8f7',
+        seafoam: '#6ee2d0',
+        ocean: '#2bb5c4',
+        oceanDeep: '#0d6a8a',
+        coral: '#ff7a5a',
+        sunset: '#ffd166',
         dusk: '#7b4b8a',
-        ink: '#1f2a2e',
-        verified: '#3aa676',
+        ink: '#0d3b4a',
+        verified: '#2ea66f',
         warn: '#e08a3c',
-        danger: '#d05050'
+        danger: '#d04545',
+        scam: '#c0392b'
       },
       fontFamily: {
         sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'Inter', 'sans-serif'],
