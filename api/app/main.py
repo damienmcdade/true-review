@@ -50,6 +50,7 @@ from .schemas import (
 from .seed import run_seed
 from .bulk_import import bulk_import_edgar, bulk_import_wikidata, bulk_import_mediawiki
 from .ai import ReviewSnippet, ask_llm
+from .public_profile import build_public_profile
 from .security import (
     sanitize_text,
     detect_problems,
@@ -413,6 +414,19 @@ def get_company(request: Request, slug: str, session: Session = Depends(get_sess
         description=company.description,
         domain=company.domain,
     )
+
+
+@app.get("/companies/{slug}/public-profile")
+@limiter.limit("30/minute")
+async def company_public_profile(request: Request, slug: str,
+                                 session: Session = Depends(get_session)):
+    """Synthesise Wikipedia + SEC EDGAR + Groq into a neutral factual
+    profile of the company. Distinct from user reviews — surfaced for
+    companies that don't yet have verified reviews."""
+    company = session.exec(select(Company).where(Company.slug == slug)).first()
+    if not company:
+        raise HTTPException(404, "Company not found")
+    return await build_public_profile(company.name)
 
 
 @app.get("/companies/{slug}/reviews", response_model=list[ReviewOut])

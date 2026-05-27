@@ -94,6 +94,32 @@ async function getUrlhaus(domain?: string) {
   }
 }
 
+type PublicProfile = {
+  company_name: string;
+  ai_synthesis: string | null;
+  ai_model: string | null;
+  wikipedia: { extract?: string; url?: string } | null;
+  edgar: {
+    ticker?: string;
+    cik?: string;
+    sic?: string;
+    recent_filings?: Array<{ form: string; date: string; url: string }>;
+  } | null;
+  sources: string[];
+};
+
+async function getPublicProfile(slug: string): Promise<PublicProfile | null> {
+  try {
+    const res = await fetch(`${API}/companies/${slug}/public-profile`, {
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as PublicProfile;
+  } catch {
+    return null;
+  }
+}
+
 async function getReviews(slug: string, reviewType?: string): Promise<ReviewItem[]> {
   const params = new URLSearchParams();
   if (reviewType) params.set('review_type', reviewType);
@@ -128,12 +154,14 @@ export default async function CompanyPage({
   const activeTab = tab && ['employment', 'shopping', 'scam_report'].includes(tab) ? tab : 'all';
 
   const company = await getCompany(slug);
-  const [reviews, wiki, edgar, urlhaus] = await Promise.all([
+  const [reviews, wiki, edgar, urlhaus, publicProfile] = await Promise.all([
     getReviews(slug, activeTab === 'all' ? undefined : activeTab),
     company ? getWikipedia(company.name) : Promise.resolve(null),
     company ? getEdgar(company.name) : Promise.resolve(null),
-    company?.domain ? getUrlhaus(company.domain) : Promise.resolve(null)
+    company?.domain ? getUrlhaus(company.domain) : Promise.resolve(null),
+    company ? getPublicProfile(slug) : Promise.resolve(null)
   ]);
+  const reviewsAreEmpty = !reviews || reviews.length === 0;
 
   if (!company) {
     return (
@@ -199,6 +227,49 @@ export default async function CompanyPage({
           </div>
         ) : null}
       </header>
+
+      {publicProfile && (publicProfile.ai_synthesis || publicProfile.wikipedia) ? (
+        <section
+          className={
+            'glass mt-6 rounded-2xl border-l-4 p-6 ' +
+            (reviewsAreEmpty ? 'border-coral/70' : 'border-ocean/40')
+          }
+        >
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-oceanDeep">
+            <Sparkles className="h-3.5 w-3.5 text-coral" />
+            Public profile · AI synthesis of public sources
+            {publicProfile.ai_model ? (
+              <span className="font-mono text-[10px] text-ink/45">
+                · {publicProfile.ai_model}
+              </span>
+            ) : null}
+          </div>
+          {publicProfile.ai_synthesis ? (
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-ink/85">
+              {publicProfile.ai_synthesis}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-ink/65">
+              No public sources available for this company yet.
+            </p>
+          )}
+          {publicProfile.sources.length > 0 ? (
+            <p className="mt-3 text-[11px] text-ink/50">
+              Cited sources: {publicProfile.sources.join(' · ')}. Not user reviews
+              — see verified reviews below.
+            </p>
+          ) : null}
+          {reviewsAreEmpty ? (
+            <div className="mt-4 rounded-xl bg-coral/10 px-3 py-2 text-xs text-coral">
+              No verified reviews yet for this company.{' '}
+              <Link href={'/review/new' as never} className="underline">
+                Be the first to share your experience
+              </Link>
+              .
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       {urlhaus?.checked && urlhaus?.found ? (
         <div className="mt-4 flex items-start gap-3 rounded-2xl border border-scam/40 bg-scam/10 p-4 text-sm">
