@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     title: 'True Review',
     description: 'Verified company culture intelligence.',
     type: 'website'
+  },
+  other: {
+    'google-adsense-account': 'ca-pub-8731629548430880'
   }
 };
 
