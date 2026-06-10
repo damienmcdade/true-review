@@ -23,7 +23,7 @@ export default function DataRequestPage() {
           <li>Object to processing or withdraw consent.</li>
         </ul>
         <p className="mt-4">
-          Email <span className="font-mono">privacy@true-review.example</span> with:
+          Email <span className="font-mono">info@cyberwaveglobal.com</span> with:
         </p>
         <ul className="mt-1 list-disc space-y-1 pl-5">
           <li>The request type.</li>

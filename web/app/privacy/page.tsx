@@ -55,7 +55,7 @@ export default function PrivacyPage() {
             <Link href="/data-request" className="underline">
               data-request form
             </Link>{' '}
-            or email <span className="font-mono">privacy@true-review.example</span>. We respond within 30 days (GDPR) or 45 days (CCPA).
+            or email <span className="font-mono">info@cyberwaveglobal.com</span>. We respond within 30 days (GDPR) or 45 days (CCPA).
           </p>
         </Section>
 
@@ -89,9 +89,9 @@ export default function PrivacyPage() {
 
         <Section title="Contact">
           <p>
-            Privacy: <span className="font-mono">privacy@true-review.example</span>
+            Privacy: <span className="font-mono">info@cyberwaveglobal.com</span>
             <br />
-            Legal / DMCA: <span className="font-mono">legal@true-review.example</span>
+            Legal / DMCA: <span className="font-mono">info@cyberwaveglobal.com</span>
             <br />
             EU representative (DSA Art. 13): see{' '}
             <Link href="/transparency" className="underline">

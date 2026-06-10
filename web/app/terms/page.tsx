@@ -52,7 +52,7 @@ export default function TermsPage() {
         <Section title="DMCA — copyright complaints">
           <p>
             To report copyright infringement, send a DMCA-compliant notice to{' '}
-            <span className="font-mono">legal@true-review.example</span> including:
+            <span className="font-mono">info@cyberwaveglobal.com</span> including:
           </p>
           <ul className="list-disc pl-5">
             <li>Identification of the copyrighted work.</li>
@@ -71,7 +71,7 @@ export default function TermsPage() {
               Notice &amp; Action form
             </Link>{' '}
             (DSA Art. 16) to report content. Trusted Flaggers (DSA Art. 22) can apply via{' '}
-            <span className="font-mono">trustflagger@true-review.example</span>. We publish a transparency report annually.
+            <span className="font-mono">info@cyberwaveglobal.com</span>. We publish a transparency report annually.
           </p>
         </Section>
 

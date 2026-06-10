@@ -27,7 +27,7 @@ from .models import Company, CompanyKind
 log = logging.getLogger("true_review.bulk_import")
 
 USER_AGENT = (
-    "TrueReview/0.5 (https://truereview.dev; legal@truereview.dev)"
+    "TrueReview/0.5 (https://truereview.dev; info@cyberwaveglobal.com)"
 )
 
 EDGAR_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"

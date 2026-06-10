@@ -47,7 +47,7 @@ export default async function TransparencyPage() {
             Notice &amp; Action
           </Link>
           . Trusted Flaggers (Art. 22):{' '}
-          <span className="font-mono">trustflagger@true-review.example</span>.
+          <span className="font-mono">info@cyberwaveglobal.com</span>.
         </p>
       </div>
 

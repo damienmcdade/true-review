@@ -22,7 +22,7 @@ import httpx
 
 
 USER_AGENT = (
-    "TrueReview/0.4 (https://truereview.dev; legal@truereview.dev)"
+    "TrueReview/0.4 (https://truereview.dev; info@cyberwaveglobal.com)"
 )
 
 

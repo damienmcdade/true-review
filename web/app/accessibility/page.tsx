@@ -26,7 +26,7 @@ export default function AccessibilityPage() {
         </ul>
         <h2 className="mt-6 text-base font-semibold text-ink">Found a problem?</h2>
         <p className="mt-2">
-          Email <span className="font-mono">accessibility@true-review.example</span>. We aim to
+          Email <span className="font-mono">info@cyberwaveglobal.com</span>. We aim to
           acknowledge within 2 business days and remediate AA-blocking issues within 30 days.
         </p>
       </article>
