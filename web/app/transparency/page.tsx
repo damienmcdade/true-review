@@ -33,8 +33,8 @@ export default async function TransparencyPage() {
       <div className="glass mt-6 rounded-3xl p-8">
         <h1 className="font-display text-3xl font-semibold tracking-tight">Transparency</h1>
         <p className="mt-3 text-ink/80">
-          Every moderation decision on True Review is logged here — tamper-evident with a SHA-256
-          hash chain so prior entries can&apos;t be silently rewritten. We publish:
+          Moderation decisions on True Review are recorded in our internal audit trail and
+          summarized publicly here as actions are taken. For each published decision we show:
         </p>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-ink/75">
           <li>What action was taken (removed, edited, warned, reinstated).</li>

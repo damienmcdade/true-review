@@ -98,6 +98,25 @@ def _schema_is_out_of_sync(insp) -> bool:
     return False
 
 
+def _has_real_reviews(insp) -> bool:
+    """True if the DB holds any non-demo review (i.e. real user data).
+
+    Used to block the destructive drop-and-recreate path. On any uncertainty
+    (table/column absent, query error) we fail SAFE and return True so we never
+    wipe data we couldn't positively confirm is throwaway demo content.
+    """
+    try:
+        if "reviews" not in insp.get_table_names():
+            return False
+        with engine.connect() as conn:
+            n = conn.execute(
+                text("SELECT COUNT(*) FROM reviews WHERE is_demo = false")
+            ).scalar()
+        return bool(n and n > 0)
+    except Exception:
+        return True
+
+
 def init_db() -> None:
     """Create tables. If we detect a pre-v0.3 schema, drop and recreate.
 
@@ -113,6 +132,17 @@ def init_db() -> None:
     """
     insp = inspect(engine)
     if _schema_is_out_of_sync(insp):
+        # Data-loss guard: the drop-and-recreate path is only acceptable while
+        # the database holds nothing but seeded demo content. Once a single
+        # real (non-demo) review exists, a schema mismatch must fail LOUDLY and
+        # be resolved with a real migration — never silently wipe production
+        # data on boot. (Replace this whole branch with Alembic before scale.)
+        if _has_real_reviews(insp):
+            raise RuntimeError(
+                "Refusing to drop tables on schema drift: real (non-demo) reviews "
+                "exist. Resolve the drift with a migration instead of recreating. "
+                "(In local dev with throwaway data, drop the tables manually.)"
+            )
         log.warning("Out-of-sync schema detected. Dropping tables + enum types and recreating.")
         with engine.begin() as conn:
             for tbl in ("security_events", "moderation_log", "employment_proofs",
