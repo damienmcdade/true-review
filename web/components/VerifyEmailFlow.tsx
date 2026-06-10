@@ -18,7 +18,23 @@ type ConfirmResp = {
   domain: string;
   company_slug: string | null;
   tier: string;
+  verification_token?: string | null;
 };
+
+function slugify(s: string): string {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// Stash the signed verification token so ReviewForm can attach it on submit and
+// the author gets the "verified" badge. Keyed by company slug ('*' = any).
+function stashVerificationToken(token: string, companySlug: string | null, typedSlug: string) {
+  try {
+    const slug = slugify(companySlug || typedSlug || '') || '*';
+    sessionStorage.setItem(`tr_vtoken:${slug}`, token);
+  } catch {
+    /* sessionStorage unavailable (privacy mode) — badge just won't apply */
+  }
+}
 
 export default function VerifyEmailFlow({ className }: { className?: string }) {
   const [email, setEmail] = useState('');
@@ -60,7 +76,10 @@ export default function VerifyEmailFlow({ className }: { className?: string }) {
         body: JSON.stringify({ token: started.token, otp })
       });
       if (error) setError(error);
-      if (data) setDone(data);
+      if (data) {
+        if (data.verification_token) stashVerificationToken(data.verification_token, data.company_slug, companySlug);
+        setDone(data);
+      }
     });
   }
 
@@ -73,9 +92,10 @@ export default function VerifyEmailFlow({ className }: { className?: string }) {
             Verified
           </div>
           <p className="mt-2 text-sm text-ink/80">
-            You&apos;re verified at <strong>{done.domain}</strong> (tier {done.tier}). Your
-            reviews on True Review will now carry an anonymous &ldquo;verified employee&rdquo;
-            badge.
+            You&apos;re verified at <strong>{done.domain}</strong> (tier {done.tier}). A review you
+            submit{done.company_slug ? <> for <strong>{done.company_slug}</strong></> : null} in this
+            browser will carry an anonymous &ldquo;verified employee&rdquo; badge. Your email is
+            never shown or linked to the review.
           </p>
         </div>
       </div>

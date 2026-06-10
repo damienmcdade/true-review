@@ -65,6 +65,11 @@ class ReviewIn(BaseModel):
     body: str = Field(min_length=20, max_length=5000)
     rating_overall: float = Field(ge=1.0, le=5.0)
 
+    # Optional signed token from POST /verify/email/confirm. When present and
+    # valid (and minted for this company), the review's author is marked
+    # verification_tier=t1_email so the "verified work email" badge shows.
+    verification_token: Optional[str] = Field(default=None, max_length=2048)
+
     # Employment
     department: Optional[str] = None
     location: Optional[str] = None

@@ -66,6 +66,15 @@ export default function ReviewForm({ className }: { className?: string }) {
       payload.scam_category = scamCategory;
       if (moneyLost) payload.money_lost = parseFloat(moneyLost);
     }
+    // If this visitor verified their work email (VerifyEmailFlow stashed a
+    // signed token for this company, or a company-agnostic one), attach it so
+    // the API attributes the review to a verified author (the T1 badge).
+    try {
+      const t = sessionStorage.getItem(`tr_vtoken:${slug}`) || sessionStorage.getItem('tr_vtoken:*');
+      if (t) payload.verification_token = t;
+    } catch {
+      /* sessionStorage unavailable — submit unverified */
+    }
 
     startTransition(async () => {
       const { data, error } = await apiFetch<{ id: string }>('/reviews', {

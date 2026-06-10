@@ -52,10 +52,16 @@ from .db import init_db, get_session, engine
 from .models import (
     Company,
     CompanyKind,
+    EmploymentProof,
     Review,
     ReviewType,
     ModerationLog,
     User,
+    VerificationTier,
+)
+from .verification import (
+    issue_review_verification_token,
+    verify_review_verification_token,
 )
 from .schemas import (
     CompanyOut,
@@ -646,6 +652,26 @@ def submit_review(
     session.add(user)
     session.flush()
 
+    # Verified-author attribution (T1 "verified work email" badge). If the
+    # client passed a valid signed token minted by /verify/email/confirm, and it
+    # was minted for THIS company (or is a company-agnostic email proof), promote
+    # the freshly-created anonymous author to t1_email and record the proof. This
+    # is the only path that makes the badge reachable for real (non-demo) reviews.
+    vclaims = verify_review_verification_token(body.verification_token)
+    if vclaims is not None:
+        token_slug = vclaims.get("company_slug")
+        if not token_slug or token_slug in (company.slug, body.company_slug):
+            user.verification_tier = VerificationTier.T1_EMAIL
+            session.add(user)
+            session.add(
+                EmploymentProof(
+                    user_id=user.id,
+                    company_id=company.id,
+                    tier=VerificationTier.T1_EMAIL,
+                    artifact_ref=f"email:{vclaims.get('domain') or 'verified'}",
+                )
+            )
+
     # Anti-spoof: derive the submitter IP from the trusted (rightmost) proxy
     # hop so a single actor can't fake distinct submitters and force a public
     # scam flag (see _abuse_ip). Defamation hygiene.
@@ -964,11 +990,19 @@ async def verify_email_confirm(
     )
     session.commit()
 
+    # Mint a signed, 30-minute token the client passes back on POST /reviews so
+    # the submitted review is attributed to a verified author (T1 badge). Bound
+    # to the verified email hash + company so it can't badge a different company.
+    verification_token = issue_review_verification_token(
+        email_hash=rec.email_hash, domain=rec.domain, company_slug=rec.company_slug
+    )
+
     return {
         "verified": True,
         "domain": rec.domain,
         "company_slug": rec.company_slug,
         "tier": "t1_email",
+        "verification_token": verification_token,
     }
 
 
