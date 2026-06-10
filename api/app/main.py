@@ -27,6 +27,26 @@ def _forwarded_ip(request: Request) -> str:
         return request.client.host
     return "unknown"
 
+
+def _abuse_ip(request: Request) -> str:
+    """Client IP for ABUSE / defamation-sensitive counting (the distinct
+    scam-report submitter tally that can auto-flag a company publicly).
+
+    Uses the RIGHTMOST X-Forwarded-For hop — the value appended by our trusted
+    edge proxy, which a client cannot forge (clients can only prepend left-hand
+    entries). This stops one actor from faking N "distinct" submitters by
+    rotating X-Forwarded-For and tripping a false public scam flag. Kept
+    separate from `_forwarded_ip` (rate-limit key) so this anti-spoof change
+    can't affect normal per-client throttling."""
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        parts = [p.strip() for p in fwd.split(",") if p.strip()]
+        if parts:
+            return parts[-1]
+    if request.client and request.client.host:
+        return request.client.host
+    return "unknown"
+
 from .config import get_settings
 from .db import init_db, get_session, engine
 from .models import (
@@ -72,60 +92,75 @@ settings = get_settings()
 limiter = Limiter(key_func=_forwarded_ip)
 
 
+def _run_bulk_imports() -> None:
+    """Blocking network bulk-imports (EDGAR / Wikidata SPARQL / MediaWiki).
+
+    Run in a BACKGROUND thread, off the startup path. These make slow upstream
+    calls and re-run on every boot while the company count is under threshold;
+    running them synchronously in the lifespan kept the app from serving until
+    they finished, so the Railway healthcheck timed out and EVERY deploy failed
+    (the last-good instance was retained). Now the app serves immediately after
+    init_db()+run_seed() and the catalog tops up in the background. All stages
+    are idempotent and non-fatal.
+    """
+    from sqlmodel import Session as _Session
+    try:
+        with _Session(engine) as session:
+            count = len(session.exec(select(Company)).all())
+            if count < 1500:
+                try:
+                    result = bulk_import_edgar(session)
+                    _log.info("EDGAR bulk import: added=%s skipped=%s",
+                              result.get("added"), result.get("skipped"))
+                except Exception as e:  # noqa: BLE001
+                    _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
+                count = len(session.exec(select(Company)).all())
+
+            if count < 30_000:
+                try:
+                    result = bulk_import_wikidata(session)
+                    _log.info(
+                        "Wikidata bulk import: added=%s skipped=%s "
+                        "listed_returned=%s private_returned=%s",
+                        result.get("added"), result.get("skipped"),
+                        result.get("listed_returned"), result.get("private_returned"),
+                    )
+                except Exception as e:  # noqa: BLE001
+                    _log.warning("Wikidata bulk import failed (non-fatal): %s", e)
+                count = len(session.exec(select(Company)).all())
+
+            if count < 30_000:
+                try:
+                    result = bulk_import_mediawiki(session)
+                    _log.info(
+                        "MediaWiki bulk import: added=%s skipped=%s "
+                        "categories=%s raw_titles=%s",
+                        result.get("added"), result.get("skipped"),
+                        result.get("categories_queried"), result.get("raw_titles"),
+                    )
+                except Exception as e:  # noqa: BLE001
+                    _log.warning("MediaWiki bulk import failed (non-fatal): %s", e)
+    except Exception as e:  # noqa: BLE001 — never let the background importer crash
+        _log.warning("Background bulk import aborted (non-fatal): %s", e)
+
+
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(app_: FastAPI):
+    import asyncio
+
+    # Fast, local startup work only — must complete before we serve traffic.
     init_db()
     from sqlmodel import Session as _Session
     with _Session(engine) as session:
-        # Always run the curated seed — it's idempotent and tops up demo
-        # content when we expand the SAMPLE_COMPANIES / *_REVIEWS lists.
+        # Idempotent curated demo seed; tops up when SAMPLE_COMPANIES /
+        # *_REVIEWS expand. Local inserts only — fast.
         run_seed(session)
 
-        # Stage 1: SEC EDGAR — every US publicly-traded operating company.
-        # Stage 2: Wikidata — every globally publicly-listed company with
-        #          an English label (covers LSE, TSX, TSE, DAX, ASX, NSE,
-        #          Euronext, JSE, …). Both stages idempotent + non-fatal.
-        count = len(session.exec(select(Company)).all())
-        if count < 1500:
-            try:
-                result = bulk_import_edgar(session)
-                _log.info("EDGAR bulk import: added=%s skipped=%s",
-                          result.get("added"), result.get("skipped"))
-            except Exception as e:  # noqa: BLE001 — never let import abort startup
-                _log.warning("EDGAR bulk import failed (non-fatal): %s", e)
-            count = len(session.exec(select(Company)).all())
-
-        # Stage 2: Wikidata SPARQL — globally publicly-listed + privately-
-        # held notable. Re-runs while under threshold so we get a top-up
-        # whenever WDQS recovers from an outage.
-        if count < 30_000:
-            try:
-                result = bulk_import_wikidata(session)
-                _log.info(
-                    "Wikidata bulk import: added=%s skipped=%s "
-                    "listed_returned=%s private_returned=%s",
-                    result.get("added"), result.get("skipped"),
-                    result.get("listed_returned"), result.get("private_returned"),
-                )
-            except Exception as e:  # noqa: BLE001
-                _log.warning("Wikidata bulk import failed (non-fatal): %s", e)
-            count = len(session.exec(select(Company)).all())
-
-        # Stage 3: MediaWiki category enumeration — fallback / supplement.
-        # Uses the Action API (different endpoint than WDQS) so it works
-        # even when SPARQL is rate-limited. Covers stock-exchange categories,
-        # privately-held majors, and topical groupings (banks, pharma, etc.).
-        if count < 30_000:
-            try:
-                result = bulk_import_mediawiki(session)
-                _log.info(
-                    "MediaWiki bulk import: added=%s skipped=%s "
-                    "categories=%s raw_titles=%s",
-                    result.get("added"), result.get("skipped"),
-                    result.get("categories_queried"), result.get("raw_titles"),
-                )
-            except Exception as e:  # noqa: BLE001
-                _log.warning("MediaWiki bulk import failed (non-fatal): %s", e)
+    # Heavy upstream catalog imports run AFTER the app is serving so they can't
+    # stall the platform healthcheck (this was the cause of every deploy
+    # failing). Fire-and-forget in a worker thread; kept referenced on the app
+    # so it isn't garbage-collected mid-run.
+    app_.state.bulk_import_task = asyncio.create_task(asyncio.to_thread(_run_bulk_imports))
     yield
 
 
@@ -165,9 +200,22 @@ app.add_middleware(
 # Security response headers
 # --------------------------------------------------------------------------- #
 
+_MAX_BODY_BYTES = 262_144  # 256 KB — review/AI/verify bodies are small JSON
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     """Headers aligned to DISA ASD STIG V-222489 / NIST 800-53 SC-7, SC-8, SI-10."""
+    # SC-5 (DoS): reject oversized request bodies up front so a multi-MB JSON
+    # payload can't be buffered into memory before per-field truncation runs.
+    _cl = request.headers.get("content-length")
+    if _cl is not None:
+        try:
+            if int(_cl) > _MAX_BODY_BYTES:
+                from fastapi.responses import JSONResponse
+                return JSONResponse({"error": "payload_too_large"}, status_code=413)
+        except ValueError:
+            pass
     try:
         response = await call_next(request)
     except Exception:
@@ -587,9 +635,10 @@ def submit_review(
     session.add(user)
     session.flush()
 
-    fwd = request.headers.get("x-forwarded-for", "")
-    ip = fwd.split(",")[0].strip() if fwd else (request.client.host if request.client else None)
-    ip_h = hash_ip(ip)
+    # Anti-spoof: derive the submitter IP from the trusted (rightmost) proxy
+    # hop so a single actor can't fake distinct submitters and force a public
+    # scam flag (see _abuse_ip). Defamation hygiene.
+    ip_h = hash_ip(_abuse_ip(request))
 
     review = Review(
         company_id=company.id,
