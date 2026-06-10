@@ -20,7 +20,14 @@ from .config import get_settings
 
 _ALGO = "HS256"
 _PURPOSE = "review_verification"
-_TTL_MINUTES = 30
+# 10-minute window (was 30): the token is bearer-style (stashed client-side), so
+# a short TTL limits how long a single confirmed mailbox can attach the badge to
+# successive review submissions. NOTE the badge attests only "a mailbox at this
+# company's domain was verified", NOT that this specific reviewer is that person
+# — a verified user can still badge more than one review within the window
+# (bounded by the 5/min review rate limit). True single-use would require a
+# server-side consumed-jti store (tracked as a follow-up).
+_TTL_MINUTES = 10
 
 
 def _epoch(dt: datetime) -> int:

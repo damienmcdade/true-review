@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             <li>Review submissions you send us (title, body, ratings, category).</li>
             <li>A salted SHA-256 hash of your IP address for rate-limiting and abuse correlation. We never store the raw IP.</li>
             <li>If you provide a contact for a content-removal request, that contact email.</li>
-            <li>Standard server logs (timestamp, route, status) retained 30 days.</li>
+            <li>Standard server logs (timestamp, route, status), kept only as long as needed for operations, security, and abuse prevention.</li>
           </ul>
         </Section>
 
@@ -61,9 +61,10 @@ export default function PrivacyPage() {
 
         <Section title="Retention">
           <p>
-            Reviews are retained while they remain useful for the community. Removed reviews are
-            kept in a tamper-evident moderation log for 24 months (NIST 800-53 AU-11), then
-            deleted. IP hashes are pruned after 90 days.
+            Reviews are retained while they remain useful to the community. Moderation actions are
+            recorded in a tamper-evident audit log. IP-address hashes and server logs are retained
+            only as long as necessary for security and abuse prevention, and removed when no longer
+            needed. You can request deletion of content about you at any time (see above).
           </p>
         </Section>
 

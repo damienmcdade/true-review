@@ -42,13 +42,36 @@ def sanitize_text(s: str, *, max_len: int = 5000) -> str:
     return cleaned[:max_len]
 
 
+def _luhn_ok(digits: str) -> bool:
+    total = 0
+    for i, ch in enumerate(reversed(digits)):
+        d = ord(ch) - 48
+        if i % 2 == 1:
+            d *= 2
+            if d > 9:
+                d -= 9
+        total += d
+    return total % 10 == 0
+
+
+def _contains_card_number(s: str) -> bool:
+    """Only flag a 13–19 digit run that actually passes the Luhn checksum, so
+    legitimate reviews mentioning order/tracking/case numbers (which the bare
+    \\b(?:\\d[ -]*?){13,19}\\b regex would greedily match) aren't rejected."""
+    for m in CREDIT_CARD_RE.finditer(s):
+        digits = re.sub(r"\D", "", m.group())
+        if 13 <= len(digits) <= 19 and _luhn_ok(digits):
+            return True
+    return False
+
+
 def detect_problems(s: str) -> list[str]:
     """Return a list of problem codes if the content should be rejected
     or queued for moderation. Empty list = safe to publish."""
     problems: list[str] = []
     if SSN_RE.search(s):
         problems.append("contains_ssn")
-    if CREDIT_CARD_RE.search(s):
+    if _contains_card_number(s):
         problems.append("contains_card_number")
     if EMAIL_RE.search(s):
         problems.append("contains_email_address")
