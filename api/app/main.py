@@ -144,23 +144,34 @@ def _run_bulk_imports() -> None:
         _log.warning("Background bulk import aborted (non-fatal): %s", e)
 
 
+def _startup_work() -> None:
+    """ALL startup work — schema init, idempotent demo seed, then the heavy
+    upstream catalog imports — run in a BACKGROUND thread so the app starts
+    serving /health (which needs no DB) immediately. Previously init_db() +
+    run_seed() ran before `yield`, so uvicorn didn't accept requests until they
+    finished; on a cold deploy that was borderline against the platform
+    healthcheck window and EVERY deploy intermittently failed "service
+    unavailable" (the last-good instance was retained). DB-backed endpoints may
+    return errors for the few seconds until init_db()+run_seed() complete; the
+    deploy goes healthy at once because the healthcheck only probes /health."""
+    from sqlmodel import Session as _Session
+    try:
+        init_db()
+        with _Session(engine) as session:
+            run_seed(session)
+    except Exception as e:  # noqa: BLE001 — never let init crash the serving app
+        _log.exception("Startup init/seed failed (non-fatal to serving): %s", e)
+        return
+    _run_bulk_imports()
+
+
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
     import asyncio
 
-    # Fast, local startup work only — must complete before we serve traffic.
-    init_db()
-    from sqlmodel import Session as _Session
-    with _Session(engine) as session:
-        # Idempotent curated demo seed; tops up when SAMPLE_COMPANIES /
-        # *_REVIEWS expand. Local inserts only — fast.
-        run_seed(session)
-
-    # Heavy upstream catalog imports run AFTER the app is serving so they can't
-    # stall the platform healthcheck (this was the cause of every deploy
-    # failing). Fire-and-forget in a worker thread; kept referenced on the app
-    # so it isn't garbage-collected mid-run.
-    app_.state.bulk_import_task = asyncio.create_task(asyncio.to_thread(_run_bulk_imports))
+    # Nothing blocks serving — schema init, seed, and imports all run in the
+    # background thread (see _startup_work) so the healthcheck can't time out.
+    app_.state.startup_task = asyncio.create_task(asyncio.to_thread(_startup_work))
     yield
 
 
