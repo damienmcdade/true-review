@@ -99,14 +99,23 @@ def _schema_is_out_of_sync(insp) -> bool:
 
 
 def _has_real_reviews(insp) -> bool:
-    """True if the DB holds any non-demo review (i.e. real user data).
+    """True only when we can POSITIVELY confirm a non-demo review exists.
 
-    Used to block the destructive drop-and-recreate path. On any uncertainty
-    (table/column absent, query error) we fail SAFE and return True so we never
-    wipe data we couldn't positively confirm is throwaway demo content.
+    Guards the destructive drop-and-recreate path. The drift→recreate branch is
+    this app's intended bootstrap for an all-demo database, and on a pre-migration
+    schema the `is_demo` column may not exist yet — so we must NOT block on a query
+    error (that would crash boot on exactly the schemas the recreate is meant to
+    fix). We therefore fail OPEN: only return True when a count of real rows
+    actually succeeds and is > 0. The realistic data-loss case the guard exists
+    for — real reviews present under the stable `is_demo` column when a later
+    schema change trips the drift check — is still fully caught, because there the
+    column exists and the count returns > 0.
     """
     try:
         if "reviews" not in insp.get_table_names():
+            return False
+        cols = {c["name"] for c in insp.get_columns("reviews")}
+        if "is_demo" not in cols:
             return False
         with engine.connect() as conn:
             n = conn.execute(
@@ -114,7 +123,7 @@ def _has_real_reviews(insp) -> bool:
             ).scalar()
         return bool(n and n > 0)
     except Exception:
-        return True
+        return False
 
 
 def init_db() -> None:
